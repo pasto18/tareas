@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Solo tu usuario puede leer o escribir. Cualquier otro acceso queda denegado.
+    match /{document=**} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email == 'lisandromarq18@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+  }
+}
