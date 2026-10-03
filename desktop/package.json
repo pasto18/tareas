@@ -1,0 +1,16 @@
+{
+  "name": "tareas-menubar",
+  "version": "1.0.0",
+  "description": "Añadir tareas rápido desde la barra de menú",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.4.4",
+    "electron": "^33.0.0"
+  }
+}
