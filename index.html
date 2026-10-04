@@ -721,23 +721,31 @@
     });
     return gisPromise;
   }
-  async function calToken() {
-    if (gToken && Date.now() < gTokenExp) return gToken;
-    await loadGis();
-    return new Promise((resolve, reject) => {
-      const client = google.accounts.oauth2.initTokenClient({
-        client_id: CALENDAR.clientId,
-        scope: CAL_SCOPE,
-        callback: (r) => {
-          if (r.error) return reject(new Error(r.error));
-          gToken = r.access_token;
-          gTokenExp = Date.now() + (r.expires_in - 60) * 1000;
-          resolve(gToken);
-        },
-        error_callback: reject,
+  let gTokenPending = null;
+  function calToken() {
+    if (gToken && Date.now() < gTokenExp) return Promise.resolve(gToken);
+    // una sola petición a la vez: un segundo popup se bloquearía y fallaría la sincronización
+    if (gTokenPending) return gTokenPending;
+    gTokenPending = (async () => {
+      await loadGis();
+      return new Promise((resolve, reject) => {
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: CALENDAR.clientId,
+          scope: CAL_SCOPE,
+          callback: (r) => {
+            if (r.error) return reject(new Error(r.error_description || r.error));
+            gToken = r.access_token;
+            gTokenExp = Date.now() + (r.expires_in - 60) * 1000;
+            resolve(gToken);
+          },
+          error_callback: (e) => reject(new Error(e && e.type === 'popup_failed_to_open'
+            ? 'El navegador bloqueó la ventana de Google. Permite los popups e inténtalo de nuevo.'
+            : (e && (e.message || e.type)) || 'No se pudo autorizar con Google')),
+        });
+        client.requestAccessToken({ login_hint: LOGIN_EMAIL });
       });
-      client.requestAccessToken({ login_hint: LOGIN_EMAIL });
-    });
+    })().finally(() => { gTokenPending = null; });
+    return gTokenPending;
   }
   async function calFetch(method, eventId, body) {
     const token = await calToken();
@@ -792,7 +800,7 @@
       if (currentDetailId === task.id) renderCalStatus(task);
     } catch (err) {
       console.error('Google Calendar:', err);
-      if (currentDetailId === task.id) renderCalStatus(task, true);
+      if (currentDetailId === task.id) renderCalStatus(task, err.message || true);
     }
   }
   function queueCalendarSync(task, fromGesture) {
@@ -1890,7 +1898,7 @@
     detailDueClear.style.display = task.dueDate ? '' : 'none';
     if (!task.dueDate) { detailCalStatus.textContent = ''; return; }
     if (!calEnabled()) detailCalStatus.textContent = 'Google Calendar aún no está configurado.';
-    else if (error) detailCalStatus.textContent = 'No se pudo sincronizar con Google Calendar.';
+    else if (error) detailCalStatus.textContent = 'No se pudo sincronizar con Google Calendar' + (typeof error === 'string' ? ' (' + error + ').' : '.');
     else detailCalStatus.textContent = task.calendarEventId ? 'Sincronizada con Google Calendar.' : 'Se sincronizará con Google Calendar.';
   }
   function onDueChange() {
