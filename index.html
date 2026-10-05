@@ -980,7 +980,8 @@
   function renderColumns(notDone, done, todayStr, extraHtml) {
     const keys = [...PROJECTS];
     [...notDone, ...done].forEach(t => { if (t.project && !keys.includes(t.project)) keys.push(t.project); });
-    const byProject = (list, p) => list.filter(t => (t.project || '') === p);
+    const byProject = (list, p) => list.filter(t => (t.project || '') === p)
+      .sort((a, b) => (b.highPriority ? 1 : 0) - (a.highPriority ? 1 : 0));
     let cols = keys.map(p => ({ project: p, open: byProject(notDone, p), closed: byProject(done, p) }));
     const loose = { project: '', open: byProject(notDone, ''), closed: byProject(done, '') };
     if (loose.open.length || loose.closed.length) cols.push(loose);
