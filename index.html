@@ -43,6 +43,9 @@
   .chip .x svg.i { width: 14px; height: 14px; stroke-width: 2.5; }
   .chip.dash.edit { color: var(--a700); border-color: var(--accent); }
   .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  /* sin barras de scroll visibles (el scroll sigue funcionando) */
+  * { scrollbar-width: none; -ms-overflow-style: none; }
+  *::-webkit-scrollbar { display: none; width: 0; height: 0; }
   .wrap { max-width: 480px; margin: 0 auto; padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
 
   /* header */
