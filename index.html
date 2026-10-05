@@ -332,9 +332,10 @@
     body.scrolled .icon-btn { width: 48px; height: 48px; }
     body.scrolled .icon-btn svg.i { width: 24px; height: 24px; }
     /* columnas */
-    .cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); align-items: start; }
-    .col { min-width: 0; border-left: 1px solid var(--divider); }
-    .col:first-child { border-left: 0; }
+    .cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); align-items: stretch; height: calc(100vh - var(--head-h, 0px) - 32px); overflow-x: auto; }
+    .col { min-width: 0; min-height: 0; border: 1px solid var(--divider); overflow-y: auto; overscroll-behavior: contain; }
+    .col + .col { margin-left: -1px; }
+    .col .proj-h { top: 0; }
     .col .proj-h { padding-left: 14px; }
     .col-done { padding: 16px 14px 6px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--n700); border-bottom: 1px solid var(--divider); }
     .today { max-width: 560px; }
