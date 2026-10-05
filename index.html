@@ -117,6 +117,15 @@
   .task.is-today .tag-prio, .task.is-today .tag-today { background: transparent; color: var(--bg); box-shadow: inset 0 0 0 1.5px var(--bg); }
   .task.is-today .t-body { padding-bottom: 34px; }
   .task.is-today .tag-today { position: absolute; right: 10px; bottom: 10px; }
+  /* Prueba: resaltado de tareas de hoy con borde */
+  body.today-outline .task.is-today { background: transparent; color: inherit; box-shadow: inset 0 0 0 3px var(--accent); }
+  body.today-outline .task.is-today .box { border-color: var(--n600); }
+  body.today-outline .task.is-today .box.progress, body.today-outline .task.is-today .box.today { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  body.today-outline .task.is-today .meta, body.today-outline .task.is-today .meta .who, body.today-outline .task.is-today .t-prog { color: var(--n700); }
+  body.today-outline .task.is-today .tag-prio, body.today-outline .task.is-today .tag-today { color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .outline-test-btn { position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; height: 40px; padding: 0 14px; font-size: 13px; font-weight: 800; border: 1px solid var(--ink); background: var(--bg); color: var(--ink); }
+  body.today-outline .outline-test-btn { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  body.locked .outline-test-btn { display: none; }
   .task.dragging { position: relative; z-index: 10; background: var(--surface); box-shadow: 0 6px 16px rgba(0,0,0,.18); transition: none; }
   .task.dragging .t-text { cursor: grabbing; }
   .box-btn { display: flex; justify-content: center; padding-top: 14px; min-height: 60px; }
@@ -343,6 +352,7 @@
 </style>
 </head>
 <body class="locked">
+  <button type="button" class="outline-test-btn" id="outlineTestBtn">Hoy: borde</button>
   <div class="login" id="loginScreen">
     <div class="login-box">
       <div class="title">Tareas</div>
@@ -858,6 +868,17 @@
       }
     }
   });
+  (function () {
+    const key = 'todayOutline';
+    let on = false;
+    try { on = localStorage.getItem(key) === '1'; } catch (e) {}
+    document.body.classList.toggle('today-outline', on);
+    document.getElementById('outlineTestBtn').addEventListener('click', () => {
+      on = !on;
+      document.body.classList.toggle('today-outline', on);
+      try { localStorage.setItem(key, on ? '1' : '0'); } catch (e) {}
+    });
+  })();
   document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
   onAuthStateChanged(auth, (user) => {
     document.body.classList.toggle('locked', !user);
