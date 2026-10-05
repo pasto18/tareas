@@ -977,7 +977,7 @@
       ${c.closed.length ? `<div class="col-done">Hechas · ${c.closed.length}</div>${c.closed.map(t => taskRowHtml(t, todayStr, 'done')).join('')}` : ''}
     </div>`;
   }
-  function renderColumns(notDone, done, todayStr) {
+  function renderColumns(notDone, done, todayStr, onlyToday, extraHtml) {
     const keys = [...PROJECTS];
     [...notDone, ...done].forEach(t => { if (t.project && !keys.includes(t.project)) keys.push(t.project); });
     const byProject = (list, p) => list.filter(t => (t.project || '') === p);
@@ -985,7 +985,8 @@
     const loose = { project: '', open: byProject(notDone, ''), closed: byProject(done, '') };
     if (loose.open.length || loose.closed.length) cols.push(loose);
     if (currentProjectFilter !== 'all') cols = cols.filter(c => c.project === currentProjectFilter);
-    return `<div class="cols">${cols.map(c => colHtml(c, todayStr)).join('')}</div>`;
+    if (onlyToday) cols = cols.filter(c => c.open.length);
+    return `<div class="cols">${cols.map(c => colHtml(c, todayStr)).join('')}${extraHtml ? `<div class="col">${extraHtml}</div>` : ''}</div>`;
   }
 
   function todayToolsHtml(todayTasksList) {
@@ -1036,7 +1037,9 @@
 
     let html = '';
     if (todayView && !planModeActive) {
-      if (todayTasks.length) {
+      if (todayTasks.length && desktopMq.matches) {
+        html += renderColumns(todayTasks, [], todayStr, true, todayToolsHtml(todayTasks));
+      } else if (todayTasks.length) {
         html += `<div class="today"><div class="today-h"><b>Hoy</b><span>${todayTasks.length} tarea${todayTasks.length === 1 ? '' : 's'}</span></div>`;
         html += renderGroupWithProjectHeaders(todayTasks, todayStr, false, 'today');
         html += todayToolsHtml(todayTasks);
