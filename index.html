@@ -76,13 +76,13 @@
   .stat.on { background: var(--ink); color: var(--bg); }
   body.scrolled .stat { height: 36px; }
   body.scrolled .stat span { opacity: 0; max-height: 0; }
-  .sel-grid { display: grid; grid-template-columns: auto 1fr 1fr auto; border-top: 1px solid var(--divider); border-bottom: 2px solid var(--divider); max-height: 49px; overflow: hidden; opacity: 1; transition: max-height .35s ease, opacity .3s ease, border-width .35s ease; }
+  .sel-grid { display: grid; grid-template-columns: auto 1fr 1fr 1fr auto; border-top: 1px solid var(--divider); border-bottom: 2px solid var(--divider); max-height: 49px; overflow: hidden; opacity: 1; transition: max-height .35s ease, opacity .3s ease, border-width .35s ease; }
   body.scrolled .sel-grid { max-height: 0; opacity: 0; border-top-width: 0; border-bottom-width: 0; }
   .today-view-btn { height: 48px; padding: 0 16px; border: 0; background: transparent; font-size: 14px; font-weight: 600; }
   .today-view-btn.on { background: var(--accent); color: var(--bg); }
   .sel-cell { position: relative; }
   .today-view-btn + .sel-cell, .sel-cell + .sel-cell { border-left: 1px solid var(--divider); }
-  .sel-cell select { width: 100%; height: 48px; border: 0; background: transparent; padding: 0 36px 0 16px; font-size: 14px; font-weight: 600; }
+  .sel-cell select { width: 100%; height: 48px; border: 0; background: transparent; padding: 0 28px 0 12px; text-overflow: ellipsis; font-size: 14px; font-weight: 600; }
   .sel-cell select.active { color: var(--a700); }
   .sel-cell select option { color: var(--ink); background: var(--bg); }
   .sel-cell svg.i { position: absolute; right: 12px; top: 15px; width: 18px; height: 18px; pointer-events: none; stroke-width: 2.5; }
@@ -397,6 +397,7 @@
           <button type="button" class="today-view-btn" id="todayViewBtn">Hoy</button>
           <div class="sel-cell"><select id="personFilterSelect" aria-label="Filtrar por persona"></select><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div>
           <div class="sel-cell"><select id="projectFilterSelect" aria-label="Filtrar por proyecto"></select><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div>
+          <div class="sel-cell"><select id="rubroFilterSelect" aria-label="Filtrar por rubro"></select><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div>
           <button type="button" class="tools-toggle-btn" id="toolsVisibleBtn" aria-label="Mostrar u ocultar herramientas en la lista"><svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
         </div>
       </div>
@@ -462,6 +463,14 @@
         <div class="add-row" id="detailProjectOtherRow" style="display:none;">
           <input class="input" type="text" id="detailProjectOtherInput" placeholder="Nombre del proyecto">
           <button type="button" id="detailProjectOtherAddBtn">Añadir</button>
+        </div>
+      </div>
+      <div class="blk">
+        <div class="lbl">Rubro</div>
+        <div class="chips" id="detailRubroChips"></div>
+        <div class="add-row" id="detailRubroOtherRow" style="display:none;">
+          <input class="input" type="text" id="detailRubroOtherInput" placeholder="Nombre del rubro">
+          <button type="button" id="detailRubroOtherAddBtn">Añadir</button>
         </div>
       </div>
       <div class="blk">
@@ -567,6 +576,8 @@
   const TOOL_SUGGESTIONS = ['Martillo', 'Taladro', 'Escalera', 'Cinta métrica', 'Portátil'];
   let PROJECTS = [...DEFAULT_PROJECTS];   // editable, se guardan en Firestore (settings/lists)
   let NAMES = [...DEFAULT_PEOPLE];
+  const DEFAULT_RUBROS = ['Construcción', 'Ordenador'];
+  let RUBROS = [...DEFAULT_RUBROS];       // idem: settings/lists.rubros
 
   const ICON = {
     check: '<svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>',
@@ -603,6 +614,16 @@
   }
   let projectEditMode = false;
   let peopleEditMode = false;
+  let rubroEditMode = false;
+  function rubroChipsHtml(current) {
+    const chips = RUBROS.map(r => rubroEditMode
+      ? chipDelHtml(r, `data-rubro="${escapeAttr(r)}" data-del="1"`)
+      : chipHtml(r, current === r, `data-rubro="${escapeAttr(r)}"`));
+    if (!rubroEditMode && current && !RUBROS.includes(current)) chips.push(chipHtml(current, true, `data-rubro="${escapeAttr(current)}"`));
+    if (!rubroEditMode) chips.push(chipHtml('+ Otros', false, 'data-rubro="__other__"', 'dash'));
+    if (RUBROS.length) chips.push(chipHtml(rubroEditMode ? 'Listo' : 'Borrar rubros', false, 'data-rubro="__edit__"', 'dash'));
+    return chips.join('');
+  }
   function projectChipsHtml(current) {
     const chips = PROJECTS.map(p => projectEditMode
       ? chipDelHtml(p, `data-project="${escapeAttr(p)}" data-del="1"`)
@@ -650,6 +671,7 @@
   let toolsVisible = false;
   let currentPersonFilter = 'all';
   let currentProjectFilter = 'all';
+  let currentRubroFilter = 'all';
   let currentDetailId = null;
   let shoppingOverlayOpen = false;
   let planModeActive = false;
@@ -659,6 +681,7 @@
   const listEl = document.getElementById('taskList');
   const personFilterSelect = document.getElementById('personFilterSelect');
   const projectFilterSelect = document.getElementById('projectFilterSelect');
+  const rubroFilterSelect = document.getElementById('rubroFilterSelect');
 
   function renderFilterOptions() {
     personFilterSelect.innerHTML = ['Todas las personas', ...NAMES].map((n, i) => `<option value="${escapeAttr(i === 0 ? 'all' : n)}">${escapeHtml(n)}</option>`).join('');
@@ -667,8 +690,12 @@
     projectFilterSelect.innerHTML = ['Todos los proyectos', ...PROJECTS].map((n, i) => `<option value="${escapeAttr(i === 0 ? 'all' : n)}">${escapeHtml(n)}</option>`).join('');
     if (currentProjectFilter !== 'all' && !PROJECTS.includes(currentProjectFilter)) currentProjectFilter = 'all';
     projectFilterSelect.value = currentProjectFilter;
+    rubroFilterSelect.innerHTML = ['Rubros', ...RUBROS].map((n, i) => `<option value="${escapeAttr(i === 0 ? 'all' : n)}">${escapeHtml(n)}</option>`).join('');
+    if (currentRubroFilter !== 'all' && !RUBROS.includes(currentRubroFilter)) currentRubroFilter = 'all';
+    rubroFilterSelect.value = currentRubroFilter;
     personFilterSelect.classList.toggle('active', currentPersonFilter !== 'all');
     projectFilterSelect.classList.toggle('active', currentProjectFilter !== 'all');
+    rubroFilterSelect.classList.toggle('active', currentRubroFilter !== 'all');
   }
   renderFilterOptions();
   document.getElementById('todayViewBtn').addEventListener('click', (e) => {
@@ -679,6 +706,11 @@
   personFilterSelect.addEventListener('change', () => {
     currentPersonFilter = personFilterSelect.value;
     personFilterSelect.classList.toggle('active', currentPersonFilter !== 'all');
+    renderList();
+  });
+  rubroFilterSelect.addEventListener('change', () => {
+    currentRubroFilter = rubroFilterSelect.value;
+    rubroFilterSelect.classList.toggle('active', currentRubroFilter !== 'all');
     renderList();
   });
   projectFilterSelect.addEventListener('change', () => {
@@ -698,6 +730,7 @@
         assignees: Array.isArray(data.assignees) ? data.assignees : splitCommaList(data.assignee),
         toolsList: Array.isArray(data.toolsList) ? data.toolsList : splitCommaList(data.tools),
         project: data.project || '',
+        rubro: data.rubro || '',
         status: data.status || 'pending',
         order: typeof data.order === 'number' ? data.order : 0,
         notes: data.notes || '',
@@ -880,10 +913,12 @@
     if (unsubTasks) return;
     unsubTasks = onSnapshot(tasksCol, mergeSnapshot, (err) => console.error('Firestore:', err));
     unsubLists = onSnapshot(listsRef, (snap) => {
-      if (!snap.exists()) { setDoc(listsRef, { projects: DEFAULT_PROJECTS, people: DEFAULT_PEOPLE }).catch(console.error); return; }
+      if (!snap.exists()) { setDoc(listsRef, { projects: DEFAULT_PROJECTS, people: DEFAULT_PEOPLE, rubros: DEFAULT_RUBROS }).catch(console.error); return; }
       const data = snap.data();
       if (Array.isArray(data.projects)) PROJECTS = data.projects;
       if (Array.isArray(data.people)) NAMES = data.people;
+      if (Array.isArray(data.rubros)) RUBROS = data.rubros;
+      else setDoc(listsRef, { rubros: RUBROS }, { merge: true }).catch(console.error);
       renderFilterOptions();
       render();
     }, (err) => console.error('Firestore:', err));
@@ -938,9 +973,10 @@
     const statusHidden = !activeStatuses[t.status];
     const personHidden = currentPersonFilter !== 'all' && !(t.assignees || []).includes(currentPersonFilter);
     const projectHidden = currentProjectFilter !== 'all' && t.project !== currentProjectFilter;
+    const rubroHidden = currentRubroFilter !== 'all' && t.rubro !== currentRubroFilter;
     const priorityHidden = highPriorityOnly && !t.highPriority;
     if (!t.text.trim()) return true;
-    return statusHidden || personHidden || projectHidden || priorityHidden;
+    return statusHidden || personHidden || projectHidden || rubroHidden || priorityHidden;
   }
 
   function subtaskRowsHtml(t) {
@@ -982,6 +1018,7 @@
     if (t.highPriority) meta.push(`<span class="tag-prio" aria-label="Prioridad alta">${ICON.flame}</span>`);
     if ((t.photos || []).length) meta.push(`<span class="ic">${ICON.camera}${t.photos.length}</span>`);
     if (t.dueDate) meta.push(`<span class="ic">${ICON.calendar}${escapeHtml(shortDate(t.dueDate, t.dueTime))}</span>`);
+    if (t.rubro) meta.push(`<span class="ic">${escapeHtml(t.rubro)}</span>`);
     if (t.status === 'progress') meta.push(`<span class="t-prog">En curso</span>`);
     if (assignees.length) meta.push(`<span class="who">${escapeHtml(who)}</span>`);
     if ((t.peopleNeeded || 1) > 1) meta.push(`<span class="ic">${ICON.users}${t.peopleNeeded} personas</span>`);
@@ -1458,7 +1495,7 @@
   function createTask(project) {
     const ref = doc(tasksCol);
     const task = {
-      id: ref.id, emoji: DEFAULT_EMOJI, text: '', assignees: [], toolsList: [], project: project || '',
+      id: ref.id, emoji: DEFAULT_EMOJI, text: '', assignees: [], toolsList: [], project: project || '', rubro: '',
       status: 'pending', order: Date.now(), notes: '', photos: [], shopping: [], subtasks: [],
       toolsChecked: {}, highPriority: false, peopleNeeded: 1, todayDate: '',
     };
@@ -1491,6 +1528,10 @@
   const detailProjectChips = document.getElementById('detailProjectChips');
   const detailProjectOtherRow = document.getElementById('detailProjectOtherRow');
   const detailProjectOtherInput = document.getElementById('detailProjectOtherInput');
+  const detailRubroChips = document.getElementById('detailRubroChips');
+  const detailRubroOtherRow = document.getElementById('detailRubroOtherRow');
+  const detailRubroOtherInput = document.getElementById('detailRubroOtherInput');
+  let detailRubroOtherOpen = false;
   const notesTextarea = document.getElementById('notesTextarea');
   const detailShopList = document.getElementById('detailShopList');
   const detailShopInput = document.getElementById('detailShopInput');
@@ -1508,6 +1549,8 @@
     pendingUploads = 0;
     detailProjectOtherOpen = false;
     projectEditMode = false;
+    detailRubroOtherOpen = false;
+    rubroEditMode = false;
     peopleEditMode = false;
     detailPersonRow.style.display = 'none';
     detailToolOtherRow.style.display = 'none';
@@ -1560,6 +1603,7 @@
     renderDetailSubtasks();
     renderDetailTools();
     renderDetailProject();
+    renderDetailRubro();
     if (active !== notesTextarea) notesTextarea.value = task.notes || '';
     renderDetailShopList();
     renderPhotos();
@@ -1903,7 +1947,7 @@
     detailProjectLabel.textContent = task.project || 'Sin proyecto';
   }
   function saveLists() {
-    setDoc(listsRef, { projects: PROJECTS, people: NAMES }).catch(console.error);
+    setDoc(listsRef, { projects: PROJECTS, people: NAMES, rubros: RUBROS }).catch(console.error);
     renderFilterOptions();
   }
   function setTaskProject(task, project) {
@@ -1953,6 +1997,60 @@
   }
   document.getElementById('detailProjectOtherAddBtn').addEventListener('click', addDetailProject);
   detailProjectOtherInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addDetailProject(); } });
+
+  function renderDetailRubro() {
+    const task = currentTask();
+    if (!task) return;
+    detailRubroChips.innerHTML = rubroChipsHtml(task.rubro || '');
+    detailRubroOtherRow.style.display = detailRubroOtherOpen ? '' : 'none';
+  }
+  function setTaskRubro(task, rubro) {
+    task.rubro = rubro;
+    renderDetailRubro();
+    renderList();
+    scheduleFieldSave(task.id, 'rubro', rubro, 0);
+  }
+  detailRubroChips.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip');
+    const task = currentTask();
+    if (!btn || !task) return;
+    const name = btn.dataset.rubro;
+    if (name === '__other__') {
+      detailRubroOtherOpen = true;
+      renderDetailRubro();
+      detailRubroOtherInput.focus();
+      return;
+    }
+    if (name === '__edit__') { rubroEditMode = !rubroEditMode; renderDetailRubro(); return; }
+    if (btn.dataset.del) {
+      if (!confirm(`¿Borrar el rubro "${name}"? Sus tareas quedarán sin rubro.`)) return;
+      RUBROS = RUBROS.filter(r => r !== name);
+      tasks.forEach(t => {
+        if (t.rubro === name) {
+          t.rubro = '';
+          setDoc(doc(db, 'tasks', t.id), { rubro: '' }, { merge: true }).catch(console.error);
+        }
+      });
+      saveLists();
+      renderDetailRubro();
+      renderList();
+      return;
+    }
+    detailRubroOtherOpen = false;
+    setTaskRubro(task, task.rubro === name ? '' : name);
+  });
+  function addDetailRubro() {
+    const task = currentTask();
+    const name = detailRubroOtherInput.value.trim();
+    if (!task || !name) return;
+    const existing = RUBROS.find(r => r.toLowerCase() === name.toLowerCase());
+    if (!existing) { RUBROS.push(name); saveLists(); }
+    detailRubroOtherInput.value = '';
+    detailRubroOtherOpen = false;
+    setTaskRubro(task, existing || name);
+  }
+  document.getElementById('detailRubroOtherAddBtn').addEventListener('click', addDetailRubro);
+  detailRubroOtherInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addDetailRubro(); } });
 
   // ---- People ----
   const detailPersonRow = document.getElementById('detailPersonRow');
