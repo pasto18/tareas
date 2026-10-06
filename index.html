@@ -43,6 +43,9 @@
   .chip .x svg.i { width: 14px; height: 14px; stroke-width: 2.5; }
   .chip.dash.edit { color: var(--a700); border-color: var(--accent); }
   .row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  /* sin barras de scroll visibles (el scroll sigue funcionando) */
+  * { scrollbar-width: none; -ms-overflow-style: none; }
+  *::-webkit-scrollbar { display: none; width: 0; height: 0; }
   .wrap { max-width: 480px; margin: 0 auto; padding-bottom: calc(112px + env(safe-area-inset-bottom)); }
 
   /* header */
@@ -117,6 +120,15 @@
   .task.is-today .tag-prio, .task.is-today .tag-today { background: transparent; color: var(--bg); box-shadow: inset 0 0 0 1.5px var(--bg); }
   .task.is-today .t-body { padding-bottom: 34px; }
   .task.is-today .tag-today { position: absolute; right: 10px; bottom: 10px; }
+  /* Prueba: resaltado de tareas de hoy con borde */
+  body.today-outline .task.is-today { background: transparent; color: inherit; box-shadow: inset 0 0 0 3px var(--accent); }
+  body.today-outline .task.is-today .box { border-color: var(--n600); }
+  body.today-outline .task.is-today .box.progress, body.today-outline .task.is-today .box.today { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  body.today-outline .task.is-today .meta, body.today-outline .task.is-today .meta .who, body.today-outline .task.is-today .t-prog { color: var(--n700); }
+  body.today-outline .task.is-today .tag-prio, body.today-outline .task.is-today .tag-today { color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .outline-test-btn { position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; height: 40px; padding: 0 14px; font-size: 13px; font-weight: 800; border: 1px solid var(--ink); background: var(--bg); color: var(--ink); }
+  body.today-outline .outline-test-btn { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  body.locked .outline-test-btn { display: none; }
   .task.dragging { position: relative; z-index: 10; background: var(--surface); box-shadow: 0 6px 16px rgba(0,0,0,.18); transition: none; }
   .task.dragging .t-text { cursor: grabbing; }
   .box-btn { display: flex; justify-content: center; padding-top: 14px; min-height: 60px; }
@@ -332,9 +344,10 @@
     body.scrolled .icon-btn { width: 48px; height: 48px; }
     body.scrolled .icon-btn svg.i { width: 24px; height: 24px; }
     /* columnas */
-    .cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); align-items: start; }
-    .col { min-width: 0; border-left: 1px solid var(--divider); }
-    .col:first-child { border-left: 0; }
+    .cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); align-items: stretch; height: calc(100vh - var(--head-h, 0px) - 32px); overflow-x: auto; }
+    .col { min-width: 0; min-height: 0; border: 1px solid var(--divider); overflow-y: auto; overscroll-behavior: contain; }
+    .col + .col { margin-left: -1px; }
+    .col .proj-h { top: 0; }
     .col .proj-h { padding-left: 14px; }
     .col-done { padding: 16px 14px 6px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--n700); border-bottom: 1px solid var(--divider); }
     .today { max-width: 560px; }
@@ -342,6 +355,7 @@
 </style>
 </head>
 <body class="locked">
+  <button type="button" class="outline-test-btn" id="outlineTestBtn">Hoy: borde</button>
   <div class="login" id="loginScreen">
     <div class="login-box">
       <div class="title">Tareas</div>
@@ -895,6 +909,17 @@
       }
     }
   });
+  (function () {
+    const key = 'todayOutline';
+    let on = false;
+    try { on = localStorage.getItem(key) === '1'; } catch (e) {}
+    document.body.classList.toggle('today-outline', on);
+    document.getElementById('outlineTestBtn').addEventListener('click', () => {
+      on = !on;
+      document.body.classList.toggle('today-outline', on);
+      try { localStorage.setItem(key, on ? '1' : '0'); } catch (e) {}
+    });
+  })();
   document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
   onAuthStateChanged(auth, (user) => {
     document.body.classList.toggle('locked', !user);
@@ -1014,15 +1039,16 @@
       ${c.closed.length ? `<div class="col-done">Hechas · ${c.closed.length}</div>${c.closed.map(t => taskRowHtml(t, todayStr, 'done')).join('')}` : ''}
     </div>`;
   }
-  function renderColumns(notDone, done, todayStr) {
+  function renderColumns(notDone, done, todayStr, extraHtml) {
     const keys = [...PROJECTS];
     [...notDone, ...done].forEach(t => { if (t.project && !keys.includes(t.project)) keys.push(t.project); });
-    const byProject = (list, p) => list.filter(t => (t.project || '') === p);
+    const byProject = (list, p) => list.filter(t => (t.project || '') === p)
+      .sort((a, b) => (b.highPriority ? 1 : 0) - (a.highPriority ? 1 : 0));
     let cols = keys.map(p => ({ project: p, open: byProject(notDone, p), closed: byProject(done, p) }));
     const loose = { project: '', open: byProject(notDone, ''), closed: byProject(done, '') };
     if (loose.open.length || loose.closed.length) cols.push(loose);
     if (currentProjectFilter !== 'all') cols = cols.filter(c => c.project === currentProjectFilter);
-    return `<div class="cols">${cols.map(c => colHtml(c, todayStr)).join('')}</div>`;
+    return `<div class="cols">${cols.map(c => colHtml(c, todayStr)).join('')}${extraHtml ? `<div class="col">${extraHtml}</div>` : ''}</div>`;
   }
 
   function todayToolsHtml(todayTasksList) {
@@ -1073,7 +1099,9 @@
 
     let html = '';
     if (todayView && !planModeActive) {
-      if (todayTasks.length) {
+      if (todayTasks.length && desktopMq.matches) {
+        html += renderColumns(todayTasks, [], todayStr, todayToolsHtml(todayTasks));
+      } else if (todayTasks.length) {
         html += `<div class="today"><div class="today-h"><b>Hoy</b><span>${todayTasks.length} tarea${todayTasks.length === 1 ? '' : 's'}</span></div>`;
         html += renderGroupWithProjectHeaders(todayTasks, todayStr, false, 'today');
         html += todayToolsHtml(todayTasks);
