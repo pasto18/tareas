@@ -1036,16 +1036,23 @@
 
   const desktopMq = window.matchMedia('(min-width: 1024px)');
   desktopMq.addEventListener('change', () => renderList());
+  const NO_STACK_PROJECTS = ['Personal', 'The Posttraumatic', 'Konvent'];
+  const STACK_MAX_TASKS = 3;
   function colHtml(c, todayStr) {
+    return `<div class="col">${colInnerHtml(c, todayStr)}</div>`;
+  }
+  function stackHtml(list, todayStr) {
+    return `<div class="col">${list.map(c => colInnerHtml(c, todayStr)).join('')}</div>`;
+  }
+  function colInnerHtml(c, todayStr) {
     const label = c.project ? escapeHtml(c.project) : 'Sin proyecto';
-    return `<div class="col">
+    return `
       <div class="proj-h">
         <b>${label}</b><span class="cnt">${c.open.length}</span>
         <button type="button" class="proj-add" data-action="add-for-project" data-project="${escapeAttr(c.project)}" aria-label="Añadir tarea aquí">${ICON.plus}</button>
       </div>
       ${c.open.map(t => taskRowHtml(t, todayStr, 'notDone')).join('')}
-      ${c.closed.length ? `<div class="col-done">Hechas · ${c.closed.length}</div>${c.closed.map(t => taskRowHtml(t, todayStr, 'done')).join('')}` : ''}
-    </div>`;
+      ${c.closed.length ? `<div class="col-done">Hechas · ${c.closed.length}</div>${c.closed.map(t => taskRowHtml(t, todayStr, 'done')).join('')}` : ''}`;
   }
   function renderColumns(notDone, done, todayStr, extraHtml) {
     const keys = [...PROJECTS];
@@ -1056,7 +1063,13 @@
     const loose = { project: '', open: byProject(notDone, ''), closed: byProject(done, '') };
     if (loose.open.length || loose.closed.length) cols.push(loose);
     if (currentProjectFilter !== 'all') cols = cols.filter(c => c.project === currentProjectFilter);
-    return `<div class="cols">${cols.map(c => colHtml(c, todayStr)).join('')}${extraHtml ? `<div class="col">${extraHtml}</div>` : ''}</div>`;
+    // proyectos con <=3 tareas abiertas se apilan en una sola columna (menos tareas abajo)
+    const openCount = p => tasks.filter(t => t.status !== 'done' && !isTaskHidden(t) && (t.project || '') === p).length;
+    const canStack = c => !NO_STACK_PROJECTS.includes(c.project) && openCount(c.project) <= STACK_MAX_TASKS;
+    const stack = cols.filter(canStack).sort((a, b) => openCount(b.project) - openCount(a.project));
+    const normal = cols.filter(c => !canStack(c));
+    const colsHtml = normal.map(c => colHtml(c, todayStr)).join('') + (stack.length ? stackHtml(stack, todayStr) : '');
+    return `<div class="cols">${colsHtml}${extraHtml ? `<div class="col">${extraHtml}</div>` : ''}</div>`;
   }
 
   function todayToolsHtml(todayTasksList) {
