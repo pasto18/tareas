@@ -1,14 +1,16 @@
 const $ = id => document.getElementById(id);
-  let project = '', people = new Set(), prio = false;
+  let project = '', rubro = '', people = new Set(), prio = false;
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 
   function renderChips(el, list, isOn, attr) {
     el.innerHTML = list.map(n => `<button type="button" class="chip ${isOn(n) ? 'on' : ''}" ${attr}="${esc(n)}">${esc(n)}</button>`).join('');
   }
-  let lists = { projects: [], people: [] };
+  let lists = { projects: [], people: [], rubros: [] };
   function drawLists() {
     renderChips($('projects'), lists.projects, n => n === project, 'data-p');
     $('projects').insertAdjacentHTML('beforeend', '<button type="button" class="chip dash" data-other="project">+ Otro</button>');
+    renderChips($('rubros'), lists.rubros, n => n === rubro, 'data-r');
+    $('rubros').insertAdjacentHTML('beforeend', '<button type="button" class="chip dash" data-other="rubro">+ Otros</button>');
     renderChips($('people'), lists.people, n => people.has(n), 'data-n');
     $('people').insertAdjacentHTML('beforeend', '<button type="button" class="chip dash" data-other="person">+ Persona</button>');
   }
@@ -27,7 +29,7 @@ const $ = id => document.getElementById(id);
     const r = await window.api.getLists();
     if (r.error) { $('msg').textContent = r.error; $('go').disabled = true; return; }
     $('go').disabled = false;
-    lists = { projects: [...r.projects], people: [...r.people] };
+    lists = { projects: [...r.projects], people: [...r.people], rubros: [...r.rubros] };
     drawLists();
   }
   $('projects').onclick = e => {
@@ -35,24 +37,31 @@ const $ = id => document.getElementById(id);
     const b = e.target.closest('[data-p]'); if (!b) return;
     project = project === b.dataset.p ? '' : b.dataset.p; drawLists();
   };
+  $('rubros').onclick = e => {
+    if (e.target.closest('[data-other]')) return showInput('newRubro');
+    const b = e.target.closest('[data-r]'); if (!b) return;
+    rubro = rubro === b.dataset.r ? '' : b.dataset.r; drawLists();
+  };
   $('people').onclick = e => {
     if (e.target.closest('[data-other]')) return showInput('newPerson');
     const b = e.target.closest('[data-n]'); if (!b) return;
     const n = b.dataset.n; people.has(n) ? people.delete(n) : people.add(n); drawLists();
   };
   $('newProject').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); commitNew('newProject', lists.projects, n => { project = n; }); } });
+  $('newRubro').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); commitNew('newRubro', lists.rubros, n => { rubro = n; }); } });
   $('newPerson').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); commitNew('newPerson', lists.people, n => people.add(n)); } });
   function reset() {
-    $('text').value = ''; $('date').value = ''; $('time').value = ''; project = ''; people = new Set(); prio = false;
+    $('text').value = ''; $('date').value = ''; $('time').value = ''; project = ''; rubro = ''; people = new Set(); prio = false; $('shop').value = '';
     $('prio').classList.remove('on'); $('msg').textContent = ''; $('msg').className = 'msg';
-    $('newProject').style.display = 'none'; $('newPerson').style.display = 'none';
+    $('newProject').style.display = 'none'; $('newRubro').style.display = 'none'; $('newPerson').style.display = 'none';
   }
   async function submit() {
     if ($('newProject').value.trim()) commitNew('newProject', lists.projects, n => { project = n; });
+    if ($('newRubro').value.trim()) commitNew('newRubro', lists.rubros, n => { rubro = n; });
     if ($('newPerson').value.trim()) commitNew('newPerson', lists.people, n => people.add(n));
     if (!$('text').value.trim()) { $('msg').textContent = 'Escribe la tarea.'; return; }
     $('go').disabled = true;
-    const r = await window.api.addTask({ text: $('text').value, project, assignees: [...people], dueDate: $('date').value, dueTime: $('time').value, highPriority: prio });
+    const r = await window.api.addTask({ text: $('text').value, project, rubro, shopping: $('shop').value.split('\n').map(x => x.trim()).filter(Boolean), assignees: [...people], dueDate: $('date').value, dueTime: $('time').value, highPriority: prio });
     $('go').disabled = false;
     if (r.error) { $('msg').className = 'msg'; $('msg').textContent = r.error; return; }
     $('msg').className = 'msg ok'; $('msg').textContent = '✓ Añadida';

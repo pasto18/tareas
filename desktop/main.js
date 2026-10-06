@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Tray, ipcMain, screen, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const admin = require('firebase-admin');
 
 const KEY_PATH = path.join(__dirname, 'serviceAccount.json');
@@ -14,12 +15,13 @@ try {
 
 const DEFAULT_PROJECTS = ['Personal', 'The Posttraumatic', 'Konvent', 'Música'];
 const DEFAULT_PEOPLE = ['Lisi', 'Octavi'];
+const DEFAULT_RUBROS = ['Construcción', 'Ordenador'];
 
 let tray, win;
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 360, height: 580, show: false, frame: false, resizable: false, fullscreenable: false,
+    width: 360, height: 720, show: false, frame: false, resizable: false, fullscreenable: false,
     skipTaskbar: true, alwaysOnTop: true, backgroundColor: '#f3f2f2',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true },
   });
@@ -61,6 +63,7 @@ ipcMain.handle('get-lists', async () => {
     return {
       projects: Array.isArray(d.projects) ? d.projects : DEFAULT_PROJECTS,
       people: Array.isArray(d.people) ? d.people : DEFAULT_PEOPLE,
+      rubros: Array.isArray(d.rubros) ? d.rubros : DEFAULT_RUBROS,
     };
   } catch (e) { return { error: 'No se pudo leer Firestore: ' + e.message }; }
 });
@@ -75,14 +78,16 @@ ipcMain.handle('add-task', async (_e, t) => {
     const cur = (await ref.get()).data() || {};
     const projects = Array.isArray(cur.projects) ? cur.projects : [...DEFAULT_PROJECTS];
     const people = Array.isArray(cur.people) ? cur.people : [...DEFAULT_PEOPLE];
-    let changed = !cur.projects || !cur.people;
+    const rubros = Array.isArray(cur.rubros) ? cur.rubros : [...DEFAULT_RUBROS];
+    let changed = !cur.projects || !cur.people || !cur.rubros;
+    if (t.rubro && !rubros.includes(t.rubro)) { rubros.push(t.rubro); changed = true; }
     if (t.project && !projects.includes(t.project)) { projects.push(t.project); changed = true; }
     (t.assignees || []).forEach(n => { if (!people.includes(n)) { people.push(n); changed = true; } });
-    if (changed) await ref.set({ projects, people });
+    if (changed) await ref.set({ projects, people, rubros });
     await db.collection('tasks').add({
       emoji: '📌', text, assignees: Array.isArray(t.assignees) ? t.assignees : [], toolsList: [],
-      project: t.project || '', status: 'pending', order: Date.now(), peopleNeeded: 1,
-      notes: '', photos: [], shopping: [], subtasks: [], toolsChecked: {}, highPriority: !!t.highPriority,
+      project: t.project || '', rubro: t.rubro || '', status: 'pending', order: Date.now(), peopleNeeded: 1,
+      notes: '', photos: [], shopping: (Array.isArray(t.shopping) ? t.shopping : []).map(x => String(x).trim()).filter(Boolean).map(x => ({ id: crypto.randomUUID(), text: x, bought: false })), subtasks: [], toolsChecked: {}, highPriority: !!t.highPriority,
       todayDate: '', dueDate: t.dueDate || '', dueTime: t.dueDate ? (t.dueTime || '') : '', calendarEventId: '',
     });
     return { ok: true };
