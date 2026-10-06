@@ -796,12 +796,16 @@
       body: body ? JSON.stringify(body) : undefined,
     });
     if (res.status === 401) { gToken = null; try { localStorage.removeItem(GTOKEN_KEY); } catch (e) {} }
-    if (!res.ok) { const err = new Error('Calendar ' + res.status); err.status = res.status; throw err; }
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.json()).error.message || ''; } catch (e) {}
+      const err = new Error('Calendar ' + res.status + (detail ? ': ' + detail : '')); err.status = res.status; throw err;
+    }
     return res.status === 204 ? null : res.json();
   }
   function pad2(n) { return String(n).padStart(2, '0'); }
   function localStamp(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}:00`; }
-  function calEventBody(task) {
+  function calEventBody(task, forPatch) {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const description = [task.project, task.notes].filter(Boolean).join('\n\n');
     let when;
@@ -809,12 +813,13 @@
       const start = new Date(`${task.dueDate}T${task.dueTime}:00`);
       const end = new Date(start.getTime() + 3600000);
       // PATCH mezcla objetos: hay que anular el campo del otro tipo (date) al pasar de todo el día a hora
-      when = { start: { dateTime: localStamp(start), timeZone: tz, date: null }, end: { dateTime: localStamp(end), timeZone: tz, date: null } };
+      when = { start: { dateTime: localStamp(start), timeZone: tz, ...(forPatch ? { date: null } : {}) }, end: { dateTime: localStamp(end), timeZone: tz, ...(forPatch ? { date: null } : {}) } };
     } else {
       const next = new Date(task.dueDate + 'T00:00:00');
       next.setDate(next.getDate() + 1);
       const nextStr = `${next.getFullYear()}-${pad2(next.getMonth() + 1)}-${pad2(next.getDate())}`;
-      when = { start: { date: task.dueDate, dateTime: null, timeZone: null }, end: { date: nextStr, dateTime: null, timeZone: null } };
+      const nul = forPatch ? { dateTime: null, timeZone: null } : {};
+      when = { start: { date: task.dueDate, ...nul }, end: { date: nextStr, ...nul } };
     }
     return { summary: task.text, description, ...when };
   }
@@ -833,7 +838,7 @@
       } else if (task.text.trim()) {
         let ev = null;
         if (task.calendarEventId) {
-          ev = await calFetch('PATCH', task.calendarEventId, calEventBody(task), interactive).catch(err => { if (err.status !== 404 && err.status !== 410) throw err; return null; });
+          ev = await calFetch('PATCH', task.calendarEventId, calEventBody(task, true), interactive).catch(err => { if (err.status !== 404 && err.status !== 410) throw err; return null; });
         }
         if (!ev) ev = await calFetch('POST', '', calEventBody(task), interactive);
         if (ev && ev.id !== task.calendarEventId) {
