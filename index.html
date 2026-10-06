@@ -694,6 +694,7 @@
         highPriority: !!data.highPriority,
         peopleNeeded: typeof data.peopleNeeded === 'number' ? data.peopleNeeded : 1,
         todayDate: data.todayDate || '',
+        dueAddedFor: data.dueAddedFor || '',
         dueDate: data.dueDate || '',
         dueTime: data.dueTime || '',
         calendarEventId: data.calendarEventId || '',
@@ -701,8 +702,23 @@
     });
     list.sort((a, b) => a.order - b.order);
     tasks = list;
+    autoPlanDue();
     render();
   }
+  // Tarea con fecha: al llegar el día (o si ya pasó) entra sola al plan de hoy y se queda hasta que se marque hecha.
+  // dueAddedFor evita volver a meterla si la quitas del plan a mano.
+  function autoPlanDue() {
+    const todayStr = getTodayString();
+    tasks.forEach(t => {
+      if (t.status === 'done' || !t.dueDate || t.dueDate > todayStr || t.dueAddedFor === t.dueDate || !t.text.trim()) return;
+      t.dueAddedFor = t.dueDate;
+      const patch = { dueAddedFor: t.dueDate };
+      if (!t.todayDate) { t.todayDate = todayStr; patch.todayDate = todayStr; }
+      setDoc(doc(db, 'tasks', t.id), patch, { merge: true }).catch(console.error);
+    });
+  }
+  // el día cambia con la app abierta: revisar al volver a ella
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && tasks.length) { autoPlanDue(); render(); } });
 
   // ---- Google Calendar (listo para activar: solo falta CALENDAR.clientId) ----
   // Usa Google Identity Services (token OAuth en el navegador) y la API REST de Calendar.
@@ -722,8 +738,16 @@
     return gisPromise;
   }
   let gTokenPending = null;
-  function calToken() {
-    if (gToken && Date.now() < gTokenExp) return Promise.resolve(gToken);
+  const GTOKEN_KEY = 'calToken';
+  try {
+    const saved = JSON.parse(localStorage.getItem(GTOKEN_KEY) || 'null');
+    if (saved && saved.exp > Date.now()) { gToken = saved.token; gTokenExp = saved.exp; }
+  } catch (e) {}
+  const calTokenValid = () => !!gToken && Date.now() < gTokenExp;
+  // interactive=false: nunca abre popup (fuera de un gesto el navegador lo bloquea); falla con 'need_gesture'
+  function calToken(interactive = true) {
+    if (calTokenValid()) return Promise.resolve(gToken);
+    if (!interactive) return Promise.reject(Object.assign(new Error('need_gesture'), { needGesture: true }));
     // una sola petición a la vez: un segundo popup se bloquearía y fallaría la sincronización
     if (gTokenPending) return gTokenPending;
     gTokenPending = (async () => {
@@ -736,26 +760,28 @@
             if (r.error) return reject(new Error(r.error_description || r.error));
             gToken = r.access_token;
             gTokenExp = Date.now() + (r.expires_in - 60) * 1000;
+            try { localStorage.setItem(GTOKEN_KEY, JSON.stringify({ token: gToken, exp: gTokenExp })); } catch (e) {}
             resolve(gToken);
           },
           error_callback: (e) => reject(new Error(e && e.type === 'popup_failed_to_open'
             ? 'El navegador bloqueó la ventana de Google. Permite los popups e inténtalo de nuevo.'
             : (e && (e.message || e.type)) || 'No se pudo autorizar con Google')),
         });
-        client.requestAccessToken({ login_hint: LOGIN_EMAIL });
+        // prompt:'' = sin pantalla de cuenta/consentimiento si ya diste permiso antes
+        client.requestAccessToken({ login_hint: LOGIN_EMAIL, prompt: '' });
       });
     })().finally(() => { gTokenPending = null; });
     return gTokenPending;
   }
-  async function calFetch(method, eventId, body) {
-    const token = await calToken();
+  async function calFetch(method, eventId, body, interactive = true) {
+    const token = await calToken(interactive);
     const base = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR.calendarId)}/events`;
     const res = await fetch(base + (eventId ? '/' + encodeURIComponent(eventId) : ''), {
       method,
       headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
     });
-    if (res.status === 401) gToken = null;
+    if (res.status === 401) { gToken = null; try { localStorage.removeItem(GTOKEN_KEY); } catch (e) {} }
     if (!res.ok) { const err = new Error('Calendar ' + res.status); err.status = res.status; throw err; }
     return res.status === 204 ? null : res.json();
   }
@@ -777,28 +803,33 @@
     }
     return { summary: task.text, description, ...when };
   }
-  async function calendarSync(task) {
+  const calPending = new Set();
+  async function calendarSync(task, interactive = false) {
     if (!calEnabled()) return;
     try {
+      // sin gesto del usuario no se abre popup: si no hay token válido, queda pendiente
+      await calToken(interactive);
       if (!task.dueDate) {
         if (task.calendarEventId) {
-          await calFetch('DELETE', task.calendarEventId).catch(err => { if (err.status !== 404 && err.status !== 410) throw err; });
+          await calFetch('DELETE', task.calendarEventId, undefined, interactive).catch(err => { if (err.status !== 404 && err.status !== 410) throw err; });
           task.calendarEventId = '';
           scheduleFieldSave(task.id, 'calendarEventId', '', 0);
         }
       } else if (task.text.trim()) {
         let ev = null;
         if (task.calendarEventId) {
-          ev = await calFetch('PATCH', task.calendarEventId, calEventBody(task)).catch(err => { if (err.status !== 404 && err.status !== 410) throw err; return null; });
+          ev = await calFetch('PATCH', task.calendarEventId, calEventBody(task), interactive).catch(err => { if (err.status !== 404 && err.status !== 410) throw err; return null; });
         }
-        if (!ev) ev = await calFetch('POST', '', calEventBody(task));
+        if (!ev) ev = await calFetch('POST', '', calEventBody(task), interactive);
         if (ev && ev.id !== task.calendarEventId) {
           task.calendarEventId = ev.id;
           scheduleFieldSave(task.id, 'calendarEventId', ev.id, 0);
         }
       }
+      calPending.delete(task.id);
       if (currentDetailId === task.id) renderCalStatus(task);
     } catch (err) {
+      if (err.needGesture) { calPending.add(task.id); return; }
       console.error('Google Calendar:', err);
       if (currentDetailId === task.id) renderCalStatus(task, err.message || true);
     }
@@ -806,12 +837,19 @@
   function queueCalendarSync(task, fromGesture) {
     if (!calEnabled()) return;
     // pedir el permiso mientras dura el gesto del usuario, para que el navegador no bloquee el popup
-    if (fromGesture && task.dueDate) calToken().catch(() => {});
+    if (fromGesture && task.dueDate && !calTokenValid()) calToken().catch(() => {});
     clearTimeout(calTimers[task.id]);
-    calTimers[task.id] = setTimeout(() => calendarSync(task), 800);
+    calTimers[task.id] = setTimeout(() => calendarSync(task, !!fromGesture), 800);
   }
+  // si quedaron cambios sin sincronizar (token vencido), el siguiente toque renueva el permiso y los envía
+  document.addEventListener('pointerdown', () => {
+    if (!calPending.size || calTokenValid() || gTokenPending) return;
+    calToken().then(() => {
+      [...calPending].forEach(id => { const t = tasks.find(x => x.id === id); if (t) calendarSync(t, true); else calPending.delete(id); });
+    }).catch(() => {});
+  }, true);
   function calendarDelete(task) {
-    if (calEnabled() && task.calendarEventId) calFetch('DELETE', task.calendarEventId).catch(console.error);
+    if (calEnabled() && task.calendarEventId) calFetch('DELETE', task.calendarEventId, undefined, false).catch(console.error);
   }
 
   // ---- Acceso: Firebase Authentication (la clave vive en Firebase, no en el código) ----
