@@ -808,12 +808,13 @@
     if (task.dueTime) {
       const start = new Date(`${task.dueDate}T${task.dueTime}:00`);
       const end = new Date(start.getTime() + 3600000);
-      when = { start: { dateTime: localStamp(start), timeZone: tz }, end: { dateTime: localStamp(end), timeZone: tz } };
+      // PATCH mezcla objetos: hay que anular el campo del otro tipo (date) al pasar de todo el día a hora
+      when = { start: { dateTime: localStamp(start), timeZone: tz, date: null }, end: { dateTime: localStamp(end), timeZone: tz, date: null } };
     } else {
       const next = new Date(task.dueDate + 'T00:00:00');
       next.setDate(next.getDate() + 1);
       const nextStr = `${next.getFullYear()}-${pad2(next.getMonth() + 1)}-${pad2(next.getDate())}`;
-      when = { start: { date: task.dueDate }, end: { date: nextStr } };
+      when = { start: { date: task.dueDate, dateTime: null, timeZone: null }, end: { date: nextStr, dateTime: null, timeZone: null } };
     }
     return { summary: task.text, description, ...when };
   }
