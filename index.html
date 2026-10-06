@@ -723,8 +723,10 @@
   // dueAddedFor evita volver a meterla si la quitas del plan a mano.
   function autoPlanDue() {
     const todayStr = getTodayString();
+    // al teclear el año el selector pasa por fechas intermedias (0002, 0020…): ignorar las de más de un año atrás
+    const minStr = (+todayStr.slice(0, 4) - 1) + todayStr.slice(4);
     tasks.forEach(t => {
-      if (t.status === 'done' || !t.dueDate || t.dueDate > todayStr || t.dueAddedFor === t.dueDate || !t.text.trim()) return;
+      if (t.status === 'done' || !t.dueDate || t.dueDate > todayStr || t.dueDate < minStr || t.dueAddedFor === t.dueDate || !t.text.trim()) return;
       t.dueAddedFor = t.dueDate;
       const patch = { dueAddedFor: t.dueDate };
       if (!t.todayDate) { t.todayDate = todayStr; patch.todayDate = todayStr; }
