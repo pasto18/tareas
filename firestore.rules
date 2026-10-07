@@ -1,11 +1,28 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Solo tu usuario puede leer o escribir. Cualquier otro acceso queda denegado.
-    match /{document=**} {
-      allow read, write: if request.auth != null
-        && request.auth.token.email == 'lisandromarq18@gmail.com'
-        && request.auth.token.email_verified == true;
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function isOwner() {
+      return signedIn() && request.auth.token.email == 'lisandromarq18@gmail.com';
+    }
+    // Invitado = existe el documento allowed/{su-email-en-minúsculas}
+    function isInvited() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/allowed/$(request.auth.token.email));
+    }
+
+    // Lista de invitados: se edita solo desde la consola de Firebase (o con la clave de servicio).
+    // Cada persona solo puede comprobar si su propio email está en la lista.
+    match /allowed/{email} {
+      allow read: if signedIn() && request.auth.token.email == email;
+      allow write: if false;
+    }
+
+    // Cada usuario solo accede a sus propios datos (users/{uid}/...), y solo si es el dueño o está invitado.
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth.uid == userId && (isOwner() || isInvited());
     }
   }
 }
