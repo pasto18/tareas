@@ -559,8 +559,9 @@
     messagingSenderId: "545559069984",
     appId: "1:545559069984:web:6e73a748e88f88784e0345"
   };
-  // Única cuenta de Google con acceso (las reglas de Firestore/Storage también lo exigen).
-  const LOGIN_EMAIL = 'lisandromarq18@gmail.com';
+  // Dueño de la app: siempre tiene acceso. Los demás entran si su email está en la colección
+  // `allowed` de Firestore (ver README.md). Las reglas de Firestore/Storage lo exigen también.
+  const OWNER_EMAIL = 'lisandromarq18@gmail.com';
   // Google Calendar: pega aquí el Client ID de OAuth (tipo "Aplicación web"). Vacío = integración desactivada.
   const CALENDAR = { clientId: '1031476136570-3cpevei9op5hpejrkrp2c2gpnua7r45d.apps.googleusercontent.com', calendarId: 'primary' };
 
@@ -568,17 +569,23 @@
   const db = getFirestore(app);
   const storage = getStorage(app);
   const auth = getAuth(app);
-  const tasksCol = collection(db, 'tasks');
-  const listsRef = doc(db, 'settings', 'lists');
+  // Cada persona tiene sus datos en users/{uid}/...; se fijan al iniciar sesión (setUserRefs).
+  let uid = null, tasksCol = null, listsRef = null;
+  const taskDoc = (id) => doc(tasksCol, id);
+  function setUserRefs(user) {
+    uid = user ? user.uid : null;
+    tasksCol = user ? collection(db, 'users', uid, 'tasks') : null;
+    listsRef = user ? doc(db, 'users', uid, 'settings', 'lists') : null;
+  }
 
   const STATUS_ORDER = ['pending', 'progress', 'done'];
   const DEFAULT_EMOJI = '📌';
-  const DEFAULT_PROJECTS = ['Personal', 'The Posttraumatic', 'Konvent', 'Música'];
-  const DEFAULT_PEOPLE = ['Lisi', 'Octavi'];
+  const DEFAULT_PROJECTS = ['Personal', 'Trabajo'];
+  const DEFAULT_PEOPLE = [];
   const TOOL_SUGGESTIONS = ['Martillo', 'Taladro', 'Escalera', 'Cinta métrica', 'Portátil'];
   let PROJECTS = [...DEFAULT_PROJECTS];   // editable, se guardan en Firestore (settings/lists)
   let NAMES = [...DEFAULT_PEOPLE];
-  const DEFAULT_RUBROS = ['Construcción', 'Ordenador'];
+  const DEFAULT_RUBROS = ['Casa', 'Trabajo', 'Otros'];
   let RUBROS = [...DEFAULT_RUBROS];       // idem: settings/lists.rubros
 
   const ICON = {
@@ -765,7 +772,7 @@
       t.dueAddedFor = t.dueDate;
       const patch = { dueAddedFor: t.dueDate };
       if (!t.todayDate) { t.todayDate = todayStr; patch.todayDate = todayStr; }
-      setDoc(doc(db, 'tasks', t.id), patch, { merge: true }).catch(console.error);
+      setDoc(taskDoc(t.id), patch, { merge: true }).catch(console.error);
     });
   }
   // el día cambia con la app abierta: revisar al volver a ella
@@ -819,7 +826,7 @@
             : (e && (e.message || e.type)) || 'No se pudo autorizar con Google')),
         });
         // prompt:'' = sin pantalla de cuenta/consentimiento si ya diste permiso antes
-        client.requestAccessToken({ login_hint: LOGIN_EMAIL, prompt: '' });
+        client.requestAccessToken({ login_hint: auth.currentUser ? auth.currentUser.email : undefined, prompt: '' });
       });
     })().finally(() => { gTokenPending = null; });
     return gTokenPending;
@@ -929,6 +936,8 @@
     if (unsubTasks) unsubTasks();
     if (unsubLists) unsubLists();
     unsubTasks = unsubLists = null;
+    gToken = null; gTokenExp = 0;
+    try { localStorage.removeItem(GTOKEN_KEY); } catch (e) {}
     tasks = [];
     currentDetailId = null;
     document.getElementById('detailOverlay').classList.remove('open');
@@ -936,16 +945,18 @@
     shoppingOverlayOpen = false;
   }
   const loginErr = document.getElementById('loginErr');
+  // Acceso: el dueño, o quien tenga su email en `allowed/{email}` (se crea a mano en la consola de Firebase).
+  async function hasAccess(user) {
+    const email = (user.email || '').toLowerCase();
+    if (!user.emailVerified || !email) return false;
+    if (email === OWNER_EMAIL) return true;
+    try { return (await getDoc(doc(db, 'allowed', email))).exists(); } catch (e) { return false; }
+  }
   document.getElementById('loginBtn').addEventListener('click', async () => {
     loginErr.textContent = '';
     try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ login_hint: LOGIN_EMAIL });
-      const { user } = await signInWithPopup(auth, provider);
-      if (user.email !== LOGIN_EMAIL) {
-        await signOut(auth);
-        loginErr.textContent = 'Esta cuenta no tiene acceso.';
-      }
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      // el control de acceso lo hace onAuthStateChanged
     } catch (err) {
       const code = err && err.code || '';
       if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
@@ -966,9 +977,15 @@
     });
   })();
   document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
+    if (user && !(await hasAccess(user))) {
+      loginErr.textContent = `${user.email} no está en la lista de invitados. Pídele acceso a quien te pasó el enlace.`;
+      await signOut(auth);
+      return;
+    }
     document.body.classList.toggle('locked', !user);
-    if (user) { startData(); render(); } else stopData();
+    if (user) { loginErr.textContent = ''; setUserRefs(user); startData(); render(); }
+    else { stopData(); setUserRefs(null); }
   });
 
   function isTaskHidden(t) {
@@ -1206,7 +1223,7 @@
     if (!task) return;
     const newList = updater(task.shopping || []);
     task.shopping = newList;
-    setDoc(doc(db, 'tasks', taskId), { shopping: newList }, { merge: true }).catch(console.error);
+    setDoc(taskDoc(taskId), { shopping: newList }, { merge: true }).catch(console.error);
     renderList();
     if (currentDetailId === taskId) renderDetailShopList();
     if (shoppingOverlayOpen) renderShoppingOverlay();
@@ -1216,7 +1233,7 @@
     if (!task) return;
     const newList = updater(task.subtasks || []);
     task.subtasks = newList;
-    setDoc(doc(db, 'tasks', taskId), { subtasks: newList }, { merge: true }).catch(console.error);
+    setDoc(taskDoc(taskId), { subtasks: newList }, { merge: true }).catch(console.error);
     renderList();
     if (currentDetailId === taskId) renderDetailSubtasks();
   }
@@ -1246,7 +1263,7 @@
     const key = id + ':' + field;
     clearTimeout(fieldTimers[key]);
     fieldTimers[key] = setTimeout(() => {
-      setDoc(doc(db, 'tasks', id), { [field]: value }, { merge: true }).catch(console.error);
+      setDoc(taskDoc(id), { [field]: value }, { merge: true }).catch(console.error);
     }, delay);
   }
 
@@ -1273,7 +1290,7 @@
       if (!task) return;
       const newChecked = { ...(task.toolsChecked || {}), [toolIndex]: !(task.toolsChecked || {})[toolIndex] };
       task.toolsChecked = newChecked;
-      setDoc(doc(db, 'tasks', taskId), { toolsChecked: newChecked }, { merge: true }).catch(console.error);
+      setDoc(taskDoc(taskId), { toolsChecked: newChecked }, { merge: true }).catch(console.error);
       renderList();
       return;
     }
@@ -1284,7 +1301,7 @@
       const idx = STATUS_ORDER.indexOf(task.status);
       task.status = STATUS_ORDER[(idx + 1) % STATUS_ORDER.length];
       render();
-      setDoc(doc(db, 'tasks', id), { status: task.status }, { merge: true }).catch(console.error);
+      setDoc(taskDoc(id), { status: task.status }, { merge: true }).catch(console.error);
       return;
     }
     const openBtn = e.target.closest('[data-action="open-detail"]');
@@ -1364,7 +1381,7 @@
       const newOrder = i * 1000;
       if (t.order !== newOrder) {
         t.order = newOrder;
-        setDoc(doc(db, 'tasks', t.id), { order: newOrder }, { merge: true }).catch(console.error);
+        setDoc(taskDoc(t.id), { order: newOrder }, { merge: true }).catch(console.error);
       }
     });
   }
@@ -1418,7 +1435,7 @@
     tasks.forEach(t => {
       if (t.todayDate) {
         t.todayDate = '';
-        setDoc(doc(db, 'tasks', t.id), { todayDate: '' }, { merge: true }).catch(console.error);
+        setDoc(taskDoc(t.id), { todayDate: '' }, { merge: true }).catch(console.error);
       }
     });
     renderList();
@@ -1572,7 +1589,7 @@
       Object.keys(fieldTimers).filter(k => k.startsWith(task.id + ':')).forEach(k => clearTimeout(fieldTimers[k]));
       (task.photos || []).forEach(p => deleteObject(storageRef(storage, p.path)).catch(() => {}));
       tasks = tasks.filter(t => t.id !== task.id);
-      deleteDoc(doc(db, 'tasks', task.id)).catch(console.error);
+      deleteDoc(taskDoc(task.id)).catch(console.error);
       renderList();
     }
     draftId = null;
@@ -1656,7 +1673,7 @@
     if (confirm(`¿Borrar la tarea "${task.text.slice(0, 60)}"?`)) {
       (task.photos || []).forEach(p => deleteObject(storageRef(storage, p.path)).catch(() => {}));
       calendarDelete(task);
-      deleteDoc(doc(db, 'tasks', task.id)).catch(console.error);
+      deleteDoc(taskDoc(task.id)).catch(console.error);
       closeDetail();
     }
   });
@@ -1976,7 +1993,7 @@
       tasks.forEach(t => {
         if (t.project === name) {
           t.project = '';
-          setDoc(doc(db, 'tasks', t.id), { project: '' }, { merge: true }).catch(console.error);
+          setDoc(taskDoc(t.id), { project: '' }, { merge: true }).catch(console.error);
         }
       });
       saveLists();
@@ -2030,7 +2047,7 @@
       tasks.forEach(t => {
         if (t.rubro === name) {
           t.rubro = '';
-          setDoc(doc(db, 'tasks', t.id), { rubro: '' }, { merge: true }).catch(console.error);
+          setDoc(taskDoc(t.id), { rubro: '' }, { merge: true }).catch(console.error);
         }
       });
       saveLists();
@@ -2107,42 +2124,71 @@
     onDueChange();
   });
 
-  function compressImage(file, maxDim = 1280, quality = 0.6) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      img.onload = () => {
+  // Compresión fuerte: WebP (o JPEG si el navegador no lo codifica), lado máx. 1280 px y objetivo <= ~120 KB.
+  // Si aún pesa más, baja la calidad y luego el tamaño. Una foto de móvil (3-5 MB) queda en ~60-120 KB.
+  const PHOTO_TARGET_BYTES = 120 * 1024;
+  const MAX_PHOTOS_PER_TASK = 10;
+  function canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+  }
+  async function compressImage(file) {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const im = new Image();
+        im.onload = () => resolve(im);
+        im.onerror = () => reject(new Error('No se pudo leer la imagen'));
+        im.src = objectUrl;
+      });
+      let maxDim = 1280;
+      let best = null;
+      for (let step = 0; step < 6; step++) {
         let { width, height } = img;
-        if (width > maxDim || height > maxDim) {
-          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
-          else { width = Math.round(width * maxDim / height); height = maxDim; }
-        }
+        const scale = Math.min(1, maxDim / Math.max(width, height));
+        width = Math.max(1, Math.round(width * scale));
+        height = Math.max(1, Math.round(height * scale));
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => { URL.revokeObjectURL(objectUrl); resolve(blob || file); }, 'image/jpeg', quality);
-      };
-      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('No se pudo leer la imagen')); };
-      img.src = objectUrl;
-    });
+        for (const q of [0.55, 0.42, 0.3]) {
+          let blob = await canvasToBlob(canvas, 'image/webp', q);
+          if (!blob || blob.type !== 'image/webp') blob = await canvasToBlob(canvas, 'image/jpeg', q);
+          if (!blob) continue;
+          if (!best || blob.size < best.size) best = blob;
+          if (blob.size <= PHOTO_TARGET_BYTES) return blob;
+        }
+        maxDim = Math.round(maxDim * 0.75);
+        if (maxDim < 480) break;
+      }
+      if (!best) throw new Error('No se pudo comprimir la imagen');
+      return best;
+    } finally { URL.revokeObjectURL(objectUrl); }
   }
 
   photoInput.addEventListener('change', async () => {
     const id = currentDetailId;
-    const files = Array.from(photoInput.files || []);
+    let files = Array.from(photoInput.files || []);
     photoInput.value = '';
     if (!id || files.length === 0) return;
+    const cur = (tasks.find(t => t.id === id) || {}).photos || [];
+    const room = Math.max(0, MAX_PHOTOS_PER_TASK - cur.length);
+    if (files.length > room) {
+      alert(`Máximo ${MAX_PHOTOS_PER_TASK} fotos por tarea.`);
+      files = files.slice(0, room);
+      if (files.length === 0) return;
+    }
     pendingUploads = files.length;
     renderPhotos();
     for (const file of files) {
       try {
         const blob = await compressImage(file);
-        const path = `tasks/${id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+        const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
+        const path = `users/${uid}/tasks/${id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const sRef = storageRef(storage, path);
-        await uploadBytes(sRef, blob, { contentType: 'image/jpeg' });
+        await uploadBytes(sRef, blob, { contentType: blob.type || 'image/jpeg' });
         const url = await getDownloadURL(sRef);
-        await updateDoc(doc(db, 'tasks', id), { photos: arrayUnion({ url, path }) });
+        await updateDoc(taskDoc(id), { photos: arrayUnion({ url, path }) });
       } catch (err) {
         console.error('Error al subir la foto:', err);
         alert("No se pudo subir una foto. Revisa tu conexión e inténtalo de nuevo.");
@@ -2166,7 +2212,7 @@
       if (!confirm('¿Borrar esta foto?')) return;
       const id = currentDetailId;
       const { path, url } = removeBtn.dataset;
-      updateDoc(doc(db, 'tasks', id), { photos: arrayRemove({ url, path }) })
+      updateDoc(taskDoc(id), { photos: arrayRemove({ url, path }) })
         .then(() => deleteObject(storageRef(storage, path)).catch(() => {}))
         .catch(console.error);
     }

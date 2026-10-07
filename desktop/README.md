@@ -1,6 +1,6 @@
 # Tareas · barra de menú (Mac)
 
-Icono "+" junto al reloj. Un clic abre un formulario y la tarea se guarda en el mismo Firestore que la web.
+Icono "+" junto al reloj. Un clic abre un formulario y la tarea se guarda en tu espacio (`users/{tu-uid}`) del mismo Firestore que la web. Es solo para el dueño.
 No hay login: usa una clave de servicio que solo vive en este Mac.
 
 ## Instalación
