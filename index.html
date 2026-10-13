@@ -147,7 +147,7 @@
   }
   .t-text::first-letter, .tt-task::first-letter, .task-link::first-letter { text-transform: uppercase; }
   .t-text.done { color: var(--n600); text-decoration: line-through; }
-  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; font-size: 13px; color: var(--n700); }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; min-height: 20px; font-size: 13px; color: var(--n700); } /* altura reservada: al pasar a "En curso" la fila no cambia de alto */
   .meta .who { font-weight: 600; color: var(--ink); }
   .meta .ic { display: inline-flex; align-items: center; gap: 4px; }
   .meta .ic svg.i { width: 14px; height: 14px; }
