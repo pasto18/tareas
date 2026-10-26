@@ -353,6 +353,24 @@
     .col .proj-h { padding-left: 14px; }
     .col-done { padding: 16px 14px 6px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--n700); border-bottom: 1px solid var(--divider); }
     .today { max-width: 560px; }
+    /* editor de tarea a todo el ancho, en 3 columnas */
+    .ov-inner { max-width: none; padding: 0 20px; }
+    .ov-head { padding-left: 0; padding-right: 0; }
+    .ov-head .h { flex: none; margin-right: 16px; font-size: 20px; }
+    .ov-head .meta-r { margin-left: auto; padding-right: 0; font-size: 14px; }
+    .ov-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+    .ov-col { min-width: 0; }
+    .ov-col + .ov-col { border-left: 1px solid var(--divider); }
+    .ov-col .seg3, .ov-col .title-ta, .ov-col .two { border-top: 0; }
+    .ov-col .blk.last { border-bottom: 1px solid var(--divider); }
+    .ov-col > :first-child { border-top: 0; }
+    .photos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .del-wrap { padding-bottom: 32px; }
+  }
+  @media (min-width: 1024px) and (max-width: 1399px) {
+    .ov-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ov-col:nth-child(3) { grid-column: 1 / -1; border-left: 0; border-top: 2px solid var(--divider); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+    .ov-col:nth-child(3) .del-wrap { grid-column: 1 / -1; }
   }
 </style>
 </head>
@@ -431,6 +449,8 @@
         <div class="h">Tarea</div>
         <div class="meta-r" id="detailProjectLabel"></div>
       </div>
+      <div class="ov-cols">
+      <div class="ov-col">
       <div class="seg3" id="detailStatus">
         <button type="button" data-status="pending">Pendiente</button>
         <button type="button" data-status="progress">En curso</button>
@@ -475,6 +495,8 @@
           <button type="button" id="detailRubroOtherAddBtn">Añadir</button>
         </div>
       </div>
+      </div>
+      <div class="ov-col">
       <div class="blk">
         <div class="lbl">Fecha (Google Calendar)</div>
         <div class="row2">
@@ -501,6 +523,8 @@
           <button type="button" id="detailSubtaskAddBtn">Añadir</button>
         </div>
       </div>
+      </div>
+      <div class="ov-col">
       <div class="blk">
         <div class="lbl tight">Lista de compras</div>
         <div id="detailShopList"></div>
@@ -520,6 +544,8 @@
       </div>
       <div class="del-wrap">
         <button type="button" class="del-btn" id="detailDeleteBtn">Borrar tarea<svg class="i" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+      </div>
+      </div>
       </div>
     </div>
   </div>
