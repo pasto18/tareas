@@ -205,28 +205,13 @@
   .ov-head .meta-r { font-size: 12px; color: var(--n700); padding-right: 12px; }
   .ov-head .icon-btn svg.i { stroke-width: 2.5; }
 
-  /* editor: en móvil los envoltorios no cuentan y se ordena con "order" */
-  #detailOverlay .ov-inner { display: flex; flex-direction: column; }
-  #detailOverlay .ov-top, #detailOverlay .ov-cols, #detailOverlay .ov-col { display: contents; }
-  #detailOverlay .ov-head { order: 0; }
-  #detailStatus { order: 1; }
-  #detailTitleInput { order: 2; }
-  #detailOverlay .two { order: 3; }
-  #detailOverlay .ov-col.c1 > .blk { order: 5; }
-  #detailOverlay .ov-top > .blk { order: 6; }
-  #detailOverlay .ov-col.c2 > .blk:nth-child(1) { order: 7; }
-  #detailOverlay .ov-col.c1 > .blk:last-child { order: 8; }
-  #detailOverlay .ov-col.c2 > .blk:nth-child(2) { order: 9; }
-  #detailOverlay .ov-col.c3 > .blk { order: 10; }
-  #detailOverlay .ov-col.c3 > .blk.last { order: 11; }
-  #detailOverlay .del-wrap { order: 12; }
   .seg3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--divider); }
   .seg3 button { height: 48px; padding: 0 12px; font-size: 14px; font-weight: 800; }
   .seg3 button + button { border-left: 1px solid var(--divider); }
   .seg3 button.on { background: var(--ink); color: var(--bg); }
   .seg3 button.on.progress { background: var(--accent); }
   .title-ta { display: block; width: 100%; border: 0; background: transparent; resize: none; overflow: hidden; padding: 18px 16px; font-weight: 800; font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; border-bottom: 2px solid var(--divider); }
-  .two { display: grid; grid-template-columns: minmax(0, 1fr); border-bottom: 1px solid var(--divider); }
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--divider); }
   .prio { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
   .prio.on { background: var(--accent); color: var(--bg); }
   .prio .l { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
@@ -368,38 +353,24 @@
     .col .proj-h { padding-left: 14px; }
     .col-done { padding: 16px 14px 6px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--n700); border-bottom: 1px solid var(--divider); }
     .today { max-width: 560px; }
-    /* editor de tarea a todo el ancho */
-    #detailOverlay .ov-inner { display: block; max-width: none; padding: 0 20px; }
-    #detailOverlay .ov-head { padding-left: 0; padding-right: 0; }
+    /* editor de tarea a todo el ancho, en 3 columnas */
+    .ov-inner { max-width: none; padding: 0 20px; }
+    .ov-head { padding-left: 0; padding-right: 0; }
     .ov-head .h { flex: none; margin-right: 16px; font-size: 20px; }
     .ov-head .meta-r { margin-left: auto; padding-right: 0; font-size: 14px; }
-    #detailOverlay .ov-top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; border-bottom: 2px solid var(--divider); }
-    #detailOverlay .ov-top > * { order: 0 !important; border-bottom: 0; }
-    #detailOverlay .ov-top > .blk { border-left: 1px solid var(--divider); border-right: 1px solid var(--divider); }
-    #detailOverlay .ov-top .seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    #detailOverlay .ov-top .seg3 button { height: 100%; min-height: 56px; }
-    #detailOverlay .ov-top .del-wrap { display: flex; align-items: center; padding: 12px 0 12px 16px; }
-    #detailOverlay .ov-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
-    #detailOverlay .ov-col { display: block; min-width: 0; }
-    #detailOverlay .ov-col > * { order: 0 !important; }
+    .ov-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+    .ov-col { min-width: 0; }
     .ov-col + .ov-col { border-left: 1px solid var(--divider); }
-    .ov-col.c1 { padding-right: 0; }
+    .ov-col .seg3, .ov-col .title-ta, .ov-col .two { border-top: 0; }
     .ov-col .blk.last { border-bottom: 1px solid var(--divider); }
     .ov-col > :first-child { border-top: 0; }
     .photos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    /* subtareas más grandes */
-    .ov-col.c1 .blk:last-child { padding-top: 22px; padding-bottom: 24px; }
-    .ov-col.c1 .blk:last-child .lbl { font-size: 14px; margin-bottom: 8px; }
-    .ov-col.c1 .sub-text, .ov-col.c1 .sub-edit-input { font-size: 19px; min-height: 58px; }
-    .ov-col.c1 .sub-item .sb { width: 28px; height: 28px; }
-    .ov-col.c1 .sub-item .sb svg.i { width: 18px; height: 18px; }
-    .ov-col.c1 .blk:last-child .input { height: 56px; font-size: 18px; }
-    .ov-col.c1 .blk:last-child .add-row button { height: 56px; font-size: 16px; }
+    .del-wrap { padding-bottom: 32px; }
   }
   @media (min-width: 1024px) and (max-width: 1399px) {
-    #detailOverlay .ov-top, #detailOverlay .ov-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    #detailOverlay .ov-top .del-wrap { grid-column: 1 / -1; padding-left: 0; }
-    #detailOverlay .ov-col.c3 { grid-column: 1 / -1; border-left: 0; border-top: 2px solid var(--divider); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+    .ov-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ov-col:nth-child(3) { grid-column: 1 / -1; border-left: 0; border-top: 2px solid var(--divider); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+    .ov-col:nth-child(3) .del-wrap { grid-column: 1 / -1; }
   }
 </style>
 </head>
@@ -478,34 +449,20 @@
         <div class="h">Tarea</div>
         <div class="meta-r" id="detailProjectLabel"></div>
       </div>
-      <div class="ov-top">
+      <div class="ov-cols">
+      <div class="ov-col">
       <div class="seg3" id="detailStatus">
         <button type="button" data-status="pending">Pendiente</button>
         <button type="button" data-status="progress">En curso</button>
         <button type="button" data-status="done">Hecha</button>
       </div>
-      <div class="blk">
-        <div class="lbl">Fecha (Google Calendar)</div>
-        <div class="row2">
-          <input class="input" type="date" id="detailDueDate" aria-label="Fecha">
-          <input class="input" type="time" id="detailDueTime" aria-label="Hora (opcional)">
-        </div>
-        <div class="none" id="detailCalStatus"></div>
-        <button type="button" class="chip dash" id="detailDueClear" style="display:none;margin-top:10px;">Quitar fecha</button>
-      </div>
-      <div class="del-wrap">
-        <button type="button" class="del-btn" id="detailDeleteBtn">Borrar tarea<svg class="i" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
-      </div>
-      </div>
-      <div class="ov-cols">
-      <div class="ov-col c1">
       <textarea class="title-ta" id="detailTitleInput" rows="2" placeholder="Descripción de la tarea"></textarea>
       <div class="two">
         <button type="button" class="prio" id="detailPriorityBtn">
           <span class="l">Prioridad</span>
           <span class="v"><svg class="i" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg><span id="detailPriorityLabel">Normal</span></span>
         </button>
-        <div class="ppl off">
+        <div class="ppl">
           <div class="lbl">Personas necesarias</div>
           <div class="stepper">
             <button type="button" class="step-btn" id="detailPeopleMinus" aria-label="Menos"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
@@ -538,16 +495,17 @@
           <button type="button" id="detailRubroOtherAddBtn">Añadir</button>
         </div>
       </div>
+      </div>
+      <div class="ov-col">
       <div class="blk">
-        <div class="lbl tight">Subtareas</div>
-        <div id="detailSubtasksList"></div>
-        <div class="add-row">
-          <input class="input" type="text" id="detailSubtaskInput" placeholder="Añadir una subtarea…">
-          <button type="button" id="detailSubtaskAddBtn">Añadir</button>
+        <div class="lbl">Fecha (Google Calendar)</div>
+        <div class="row2">
+          <input class="input" type="date" id="detailDueDate" aria-label="Fecha">
+          <input class="input" type="time" id="detailDueTime" aria-label="Hora (opcional)">
         </div>
+        <div class="none" id="detailCalStatus"></div>
+        <button type="button" class="chip dash" id="detailDueClear" style="display:none;margin-top:10px;">Quitar fecha</button>
       </div>
-      </div>
-      <div class="ov-col c2">
       <div class="blk">
         <div class="lbl">Herramientas necesarias</div>
         <div class="chips" id="detailToolsList"></div>
@@ -558,6 +516,16 @@
         </div>
       </div>
       <div class="blk">
+        <div class="lbl tight">Subtareas</div>
+        <div id="detailSubtasksList"></div>
+        <div class="add-row">
+          <input class="input" type="text" id="detailSubtaskInput" placeholder="Añadir una subtarea…">
+          <button type="button" id="detailSubtaskAddBtn">Añadir</button>
+        </div>
+      </div>
+      </div>
+      <div class="ov-col">
+      <div class="blk">
         <div class="lbl tight">Lista de compras</div>
         <div id="detailShopList"></div>
         <div class="add-row">
@@ -565,8 +533,6 @@
           <button type="button" id="detailShopAddBtn">Añadir</button>
         </div>
       </div>
-      </div>
-      <div class="ov-col c3">
       <div class="blk">
         <div class="lbl">Notas</div>
         <textarea class="input" id="notesTextarea" rows="4" placeholder="Notas privadas — no se muestran en la lista"></textarea>
@@ -575,6 +541,9 @@
         <div class="lbl">Fotos</div>
         <div class="photos" id="photosGrid"></div>
         <input type="file" accept="image/*" multiple id="photoInput" style="display:none;">
+      </div>
+      <div class="del-wrap">
+        <button type="button" class="del-btn" id="detailDeleteBtn">Borrar tarea<svg class="i" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
       </div>
       </div>
       </div>
@@ -1097,7 +1066,7 @@
     if (t.rubro) meta.push(`<span class="ic">${escapeHtml(t.rubro)}</span>`);
     if (t.status === 'progress') meta.push(`<span class="t-prog">En curso</span>`);
     if (assignees.length) meta.push(`<span class="who">${escapeHtml(who)}</span>`);
-    /* personas necesarias oculto por ahora */ if (false && (t.peopleNeeded || 1) > 1) meta.push(`<span class="ic">${ICON.users}${t.peopleNeeded} personas</span>`);
+    if ((t.peopleNeeded || 1) > 1) meta.push(`<span class="ic">${ICON.users}${t.peopleNeeded} personas</span>`);
     if (toolsVisible && (t.toolsList || []).length) meta.push(`<span class="ic">${ICON.wrench}${escapeHtml(t.toolsList.join(', '))}</span>`);
     return `
       <div class="task ${isToday ? 'is-today' : ''}" data-id="${t.id}" data-section="${section}" data-project="${escapeAttr(t.project || '')}">
