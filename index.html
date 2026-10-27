@@ -76,7 +76,7 @@
   .stat.on { background: var(--ink); color: var(--bg); }
   body.scrolled .stat { height: 36px; }
   body.scrolled .stat span { opacity: 0; max-height: 0; }
-  .sel-grid { display: grid; grid-template-columns: auto 1fr 1fr auto; border-top: 1px solid var(--divider); border-bottom: 2px solid var(--divider); max-height: 49px; overflow: hidden; opacity: 1; transition: max-height .35s ease, opacity .3s ease, border-width .35s ease; }
+  .sel-grid { display: grid; grid-template-columns: auto 1fr 1fr auto auto; border-top: 1px solid var(--divider); border-bottom: 2px solid var(--divider); max-height: 49px; overflow: hidden; opacity: 1; transition: max-height .35s ease, opacity .3s ease, border-width .35s ease; }
   body.scrolled .sel-grid { max-height: 0; opacity: 0; border-top-width: 0; border-bottom-width: 0; }
   .today-view-btn { height: 48px; padding: 0 16px; border: 0; background: transparent; font-size: 14px; font-weight: 600; }
   .today-view-btn.on { background: var(--accent); color: var(--bg); }
@@ -92,6 +92,7 @@
   .tools-toggle-btn svg.i { width: 18px; height: 18px; stroke-width: 2.5; }
   .tools-toggle-btn.on { background: var(--ink); color: var(--bg); }
   .tools-toggle-btn.on svg.i { fill: currentColor; }
+  .tools-toggle-btn.subs-toggle-btn.on svg.i { fill: none; }
   .plan-banner { display: none; background: var(--accent); color: var(--bg); padding: 18px 16px 16px; }
   .plan-banner-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .plan-banner h2 { margin: 0; font-weight: 800; font-size: 28px; line-height: 1.05; letter-spacing: -0.015em; }
@@ -419,6 +420,7 @@
           <div class="sel-cell"><select id="projectFilterSelect" aria-label="Filtrar por proyecto"></select><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div>
           <div class="sel-cell"><select id="rubroFilterSelect" aria-label="Filtrar por rubro"></select><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div>
           <button type="button" class="tools-toggle-btn" id="toolsVisibleBtn" aria-label="Mostrar u ocultar herramientas en la lista"><svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
+          <button type="button" class="tools-toggle-btn subs-toggle-btn on" id="subsVisibleBtn" aria-label="Mostrar u ocultar subtareas en la lista"><svg class="i" viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg></button>
         </div>
       </div>
     </div>
@@ -704,6 +706,8 @@
   let activeStatuses = { pending: true, progress: true, done: false };
   let highPriorityOnly = false;
   let toolsVisible = false;
+  let subsVisible = true;
+  let subsBeforePlan = true;
   let currentPersonFilter = 'all';
   let currentProjectFilter = 'all';
   let currentRubroFilter = 'all';
@@ -1025,6 +1029,7 @@
   }
 
   function subtaskRowsHtml(t) {
+    if (!subsVisible) return '';
     const manual = (t.subtasks || []).map(s => `
       <button type="button" class="sub-row" data-action="toggle-subtask" data-task-id="${t.id}" data-item-id="${s.id}">
         <span class="sb ${s.done ? 'on' : ''}">${s.done ? ICON.check : ''}</span>
@@ -1449,6 +1454,10 @@
 
   function setPlanMode(on) {
     const before = listEl.getBoundingClientRect().top;
+    // al planear el día las subtareas se esconden por defecto (se pueden volver a mostrar con el botón)
+    if (on && !planModeActive) { subsBeforePlan = subsVisible; subsVisible = false; }
+    else if (!on && planModeActive) subsVisible = subsBeforePlan;
+    subsVisibleBtn.classList.toggle('on', subsVisible);
     planModeActive = on;
     renderList();
     // keep the list where it was even though the plan banner changes the header height
@@ -1532,6 +1541,13 @@
   toolsVisibleBtn.addEventListener('click', () => {
     toolsVisible = !toolsVisible;
     toolsVisibleBtn.classList.toggle('on', toolsVisible);
+    renderList();
+  });
+
+  const subsVisibleBtn = document.getElementById('subsVisibleBtn');
+  subsVisibleBtn.addEventListener('click', () => {
+    subsVisible = !subsVisible;
+    subsVisibleBtn.classList.toggle('on', subsVisible);
     renderList();
   });
 
