@@ -1224,7 +1224,16 @@
       }
     }
     if (!html) html = `<div class="empty"><b>Nada por aquí</b><span>Cambia los filtros de arriba o añade una tarea nueva.</span></div>`;
+    // al repintar se conserva el scroll (ventana, columnas y fila de columnas) para que la lista no salte arriba
+    const winY = window.scrollY;
+    const colsEl = listEl.querySelector('.cols');
+    const colsLeft = colsEl ? colsEl.scrollLeft : 0;
+    const colTops = [...listEl.querySelectorAll('.col')].map(c => c.scrollTop);
     listEl.innerHTML = html;
+    const newColsEl = listEl.querySelector('.cols');
+    if (newColsEl) newColsEl.scrollLeft = colsLeft;
+    listEl.querySelectorAll('.col').forEach((c, i) => { if (colTops[i]) c.scrollTop = colTops[i]; });
+    if (window.scrollY !== winY) window.scrollTo(0, winY);
   }
 
   function render() {
