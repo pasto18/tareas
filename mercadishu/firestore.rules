@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function isOwner() {
+      return signedIn() && request.auth.token.email == 'lisandromarq18@gmail.com';
+    }
+    // Equipo del Mercadishu = existe el documento mercadishu_allowed/{email-en-minúsculas}
+    function isMember() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/mercadishu_allowed/$(request.auth.token.email));
+    }
+
+    match /mercadishu_allowed/{email} {
+      allow read: if signedIn() && request.auth.token.email == email;
+      allow write: if false;
+    }
+
+    // Tablero compartido: todo el equipo lee y escribe lo mismo.
+    match /boards/mercadishu/{document=**} {
+      allow read, write: if isOwner() || isMember();
+    }
+
+    // ---- Reglas de la app "Tareas" original (si el proyecto de Firebase es el mismo, se conservan) ----
+    function isInvited() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/allowed/$(request.auth.token.email));
+    }
+    match /allowed/{email} {
+      allow read: if signedIn() && request.auth.token.email == email;
+      allow write: if false;
+    }
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth.uid == userId && (isOwner() || isInvited());
+    }
+  }
+}

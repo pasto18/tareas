@@ -1,0 +1,36 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function isImage() {
+      return request.resource.size < 400 * 1024
+        && request.resource.contentType.matches('image/(webp|jpeg)');
+    }
+    function hasAccess() {
+      return signedIn() && (
+        request.auth.token.email == 'lisandromarq18@gmail.com'
+        || firestore.exists(/databases/(default)/documents/allowed/$(request.auth.token.email))
+      );
+    }
+    function isMember() {
+      return signedIn() && (
+        request.auth.token.email == 'lisandromarq18@gmail.com'
+        || firestore.exists(/databases/(default)/documents/mercadishu_allowed/$(request.auth.token.email))
+      );
+    }
+
+    // Fotos del Mercadishu: boards/mercadishu/tasks/{tarea}/{archivo}. Las ve y sube todo el equipo.
+    match /boards/mercadishu/{allPaths=**} {
+      allow read, delete: if isMember();
+      allow create, update: if isMember() && isImage();
+    }
+
+    // Reglas de la app "Tareas" original
+    match /users/{userId}/{allPaths=**} {
+      allow read, delete: if request.auth.uid == userId && hasAccess();
+      allow create, update: if request.auth.uid == userId && hasAccess() && isImage();
+    }
+  }
+}
