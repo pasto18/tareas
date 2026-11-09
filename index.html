@@ -304,43 +304,6 @@
   .shop-g .item-main { min-height: 52px; }
   .shop-g .item-main span { font-size: 17px; }
 
-  /* cerrar proyecto + historial */
-  .proj-close { margin-left: auto; width: 44px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--n600); }
-  .proj-close:active { background: var(--surface); color: var(--ink); }
-  .proj-close svg.i { width: 18px; height: 18px; stroke-width: 2.25; }
-  .proj-close + .proj-add { margin-left: 0; }
-  .form-wrap { max-width: 640px; }
-  .close-sum { padding: 16px; border-bottom: 1px solid var(--divider); font-size: 15px; }
-  .close-sum b { font-weight: 800; }
-  .close-warn { margin-top: 6px; color: var(--a700); font-size: 14px; }
-  .row3 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 84px; gap: 8px; }
-  .hist-tot { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 2px solid var(--divider); }
-  .hist-tot > div { padding: 16px; }
-  .hist-tot > div + div { border-left: 1px solid var(--divider); }
-  .hist-tot b { display: block; font-weight: 800; font-size: 26px; line-height: 1; letter-spacing: -0.02em; }
-  .hist-tot span { display: block; margin-top: 6px; font-size: 12px; color: var(--n700); }
-  .hist-grid { max-width: 880px; }
-  .hist-p { border-bottom: 1px solid var(--divider); }
-  .hist-p > summary { list-style: none; cursor: pointer; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
-  .hist-p > summary::-webkit-details-marker { display: none; }
-  .hist-p > summary:active { background: var(--surface); }
-  .hist-name { font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
-  .hist-money { font-weight: 800; font-size: 18px; text-align: right; }
-  .hist-sub { grid-column: 1 / -1; font-size: 13px; color: var(--n700); }
-  .hist-body { padding: 0 16px 18px; }
-  .hist-kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; font-size: 14px; margin-bottom: 12px; }
-  .hist-kv dt { color: var(--n700); }
-  .hist-kv dd { margin: 0; font-weight: 600; }
-  .hist-notes { font-size: 14px; white-space: pre-wrap; background: var(--surface); padding: 10px 12px; margin-bottom: 12px; }
-  .hist-t { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--divider); font-size: 14px; }
-  .hist-t .sb { width: 18px; height: 18px; margin-top: 2px; }
-  .hist-t small { display: block; color: var(--n700); font-size: 12px; margin-top: 2px; }
-  .hist-t .txt.done { color: var(--n600); text-decoration: line-through; }
-  .hist-act { display: flex; gap: 8px; margin-top: 14px; }
-  .hist-act button { height: 44px; padding: 0 16px; border: 1px solid var(--ink); font-weight: 800; font-size: 14px; }
-  .hist-act button.danger { border-color: var(--accent); color: var(--a700); }
-  .hist-act button:active { background: var(--surface); }
-  .sugg-lbl { margin-top: 10px; font-size: 12px; color: var(--n700); }
   .lightbox { position: fixed; inset: 0; z-index: 60; background: var(--n900); display: none; align-items: center; justify-content: center; padding: 16px; }
   .lightbox.open { display: flex; }
   .lightbox img { max-width: 100%; max-height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; transform-origin: center; will-change: transform; }
@@ -353,7 +316,7 @@
   @media (min-width: 1024px) {
     .wrap { max-width: none; padding: 0 20px 32px; }
     .bar, .legend { display: none; }
-    .head { display: grid; grid-template-columns: auto auto auto 1fr auto auto auto; align-items: center; column-gap: 8px; border-bottom: 2px solid var(--divider); }
+    .head { display: grid; grid-template-columns: auto auto auto 1fr auto auto; align-items: center; column-gap: 8px; border-bottom: 2px solid var(--divider); }
     .top { display: contents; }
     .filters-block { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 16px; padding: 4px 0 12px; }
     .top-text { grid-column: 1; grid-row: 1; flex: none; padding: 12px 28px 10px 0; }
@@ -366,9 +329,8 @@
     .top-btn.pri:active { background: var(--a700); }
     #planToggleBtn2 { grid-column: 2; grid-row: 1; }
     #addToggleBtn2 { grid-column: 3; grid-row: 1; }
-    #historyOpenBtn { grid-column: 5; grid-row: 1; }
-    #shoppingOpenBtn { grid-column: 6; grid-row: 1; }
-    #logoutBtn { grid-column: 7; grid-row: 1; }
+    #shoppingOpenBtn { grid-column: 5; grid-row: 1; }
+    #logoutBtn { grid-column: 6; grid-row: 1; }
     .sel-grid { display: flex; border: 1px solid var(--divider); max-height: none; }
     .sel-cell select { width: 210px; }
     .plan-banner { grid-column: 1 / -1; grid-row: 3; margin-bottom: 8px; }
@@ -429,7 +391,6 @@
           <div class="title">Tareas</div>
           <div class="sub" id="subLine">&nbsp;</div>
         </div>
-        <button class="icon-btn" id="historyOpenBtn" aria-label="Historial de proyectos cerrados"><svg class="i" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg></button>
         <button class="icon-btn" id="shoppingOpenBtn" aria-label="Lista de compras">
           <svg class="i" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
           <span class="badge" id="shopBadge" hidden></span>
@@ -527,7 +488,6 @@
           <input class="input" type="text" id="detailProjectOtherInput" placeholder="Nombre del proyecto">
           <button type="button" id="detailProjectOtherAddBtn">Añadir</button>
         </div>
-        <div id="detailProjectSuggest"></div>
       </div>
       <div class="blk">
         <div class="lbl">Rubro</div>
@@ -603,63 +563,13 @@
     </div>
   </div>
 
-  <!-- Cerrar proyecto -->
-  <div class="overlay" id="closeOverlay">
-    <div class="ov-inner">
-      <div class="ov-head">
-        <button class="icon-btn" id="closeBackBtn" aria-label="Atrás"><svg class="i" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button>
-        <div class="h">Cerrar proyecto</div>
-        <div class="meta-r" id="closeProjName"></div>
-      </div>
-      <div class="form-wrap">
-        <div class="close-sum" id="closeSummary"></div>
-        <div class="blk">
-          <div class="lbl">Horas trabajadas</div>
-          <input class="input" type="number" inputmode="decimal" min="0" step="0.25" id="closeHours" placeholder="0">
-        </div>
-        <div class="blk">
-          <div class="lbl">Cobrado</div>
-          <div class="row2">
-            <input class="input" type="number" inputmode="decimal" min="0" step="any" id="closeAmount" placeholder="Importe">
-            <input class="input" type="text" id="closeCurrency" placeholder="Moneda" maxlength="8">
-          </div>
-        </div>
-        <div class="blk">
-          <div class="lbl">Fechas</div>
-          <div class="row2">
-            <label><div class="none">Entregado</div><input class="input" type="date" id="closeDelivered"></label>
-            <label><div class="none">Cobrado</div><input class="input" type="date" id="closePaid"></label>
-          </div>
-        </div>
-        <div class="blk">
-          <div class="lbl">Notas</div>
-          <textarea class="input" id="closeNotes" rows="3" placeholder="Cliente, factura, lo que quieras recordar"></textarea>
-        </div>
-        <div class="del-wrap">
-          <button type="button" class="btn btn-pri" id="closeConfirmBtn">Cerrar y guardar en el historial<svg class="i" viewBox="0 0 24 24" style="stroke-width:2.5"><path d="M20 6 9 17l-5-5"/></svg></button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Historial de proyectos cerrados -->
-  <div class="overlay" id="historyOverlay">
-    <div class="ov-inner">
-      <div class="ov-head">
-        <button class="icon-btn" id="historyBackBtn" aria-label="Atrás"><svg class="i" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button>
-        <div class="h">Historial</div>
-      </div>
-      <div class="hist-grid" id="historyBody"></div>
-    </div>
-  </div>
-
   <div class="lightbox" id="lightbox"><button type="button" class="lightbox-x" id="lightboxClose" aria-label="Cerrar"><svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button><img id="lightboxImg" src="data:," alt=""></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import {
     getFirestore, collection, doc, getDoc, setDoc, addDoc, deleteDoc, onSnapshot,
-    updateDoc, arrayUnion, arrayRemove, writeBatch
+    updateDoc, arrayUnion, arrayRemove
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   import {
     getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject
@@ -688,13 +598,12 @@
   const storage = getStorage(app);
   const auth = getAuth(app);
   // Cada persona tiene sus datos en users/{uid}/...; se fijan al iniciar sesión (setUserRefs).
-  let uid = null, tasksCol = null, listsRef = null, closedCol = null;
+  let uid = null, tasksCol = null, listsRef = null;
   const taskDoc = (id) => doc(tasksCol, id);
   function setUserRefs(user) {
     uid = user ? user.uid : null;
     tasksCol = user ? collection(db, 'users', uid, 'tasks') : null;
     listsRef = user ? doc(db, 'users', uid, 'settings', 'lists') : null;
-    closedCol = user ? collection(db, 'users', uid, 'closedProjects') : null;
   }
 
   const STATUS_ORDER = ['pending', 'progress', 'done'];
@@ -715,7 +624,6 @@
     flame: '<svg class="i" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
     users: '<svg class="i" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     wrench: '<svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
-    flag: '<svg class="i" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg>',
     camera: '<svg class="i" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
   };
 
@@ -872,9 +780,6 @@
         highPriority: !!data.highPriority,
         peopleNeeded: typeof data.peopleNeeded === 'number' ? data.peopleNeeded : 1,
         todayDate: data.todayDate || '',
-        createdAt: data.createdAt || '',
-        startedAt: data.startedAt || '',
-        doneAt: data.doneAt || '',
         dueAddedFor: data.dueAddedFor || '',
         dueDate: data.dueDate || '',
         dueTime: data.dueTime || '',
@@ -1042,17 +947,10 @@
   }
 
   // ---- Acceso: Firebase Authentication (la clave vive en Firebase, no en el código) ----
-  let unsubTasks = null, unsubLists = null, unsubClosed = null;
-  let closedProjects = [];   // historial: users/{uid}/closedProjects
+  let unsubTasks = null, unsubLists = null;
   function startData() {
     if (unsubTasks) return;
     unsubTasks = onSnapshot(tasksCol, mergeSnapshot, (err) => console.error('Firestore:', err));
-    unsubClosed = onSnapshot(closedCol, (snap) => {
-      closedProjects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      closedProjects.sort((a, b) => String(b.closedAt || '').localeCompare(String(a.closedAt || '')));
-      if (historyOverlay.classList.contains('open')) renderHistory();
-      if (currentDetailId) renderDetailProject();
-    }, (err) => console.error('Firestore:', err));
     unsubLists = onSnapshot(listsRef, (snap) => {
       if (!snap.exists()) { setDoc(listsRef, { projects: DEFAULT_PROJECTS, people: DEFAULT_PEOPLE, rubros: DEFAULT_RUBROS }).catch(console.error); return; }
       const data = snap.data();
@@ -1067,9 +965,7 @@
   function stopData() {
     if (unsubTasks) unsubTasks();
     if (unsubLists) unsubLists();
-    if (unsubClosed) unsubClosed();
-    unsubTasks = unsubLists = unsubClosed = null;
-    closedProjects = [];
+    unsubTasks = unsubLists = null;
     gToken = null; gTokenExp = 0;
     try { localStorage.removeItem(GTOKEN_KEY); } catch (e) {}
     tasks = [];
@@ -1077,8 +973,6 @@
     document.getElementById('detailOverlay').classList.remove('open');
     document.getElementById('shoppingOverlay').classList.remove('open');
     shoppingOverlayOpen = false;
-    document.getElementById('closeOverlay').classList.remove('open');
-    document.getElementById('historyOverlay').classList.remove('open');
   }
   const loginErr = document.getElementById('loginErr');
   // Acceso: el dueño, o quien tenga su email en `allowed/{email}` (se crea a mano en la consola de Firebase).
@@ -1193,17 +1087,6 @@
       </div>`;
   }
 
-  // Cambia el estado y apunta cuándo empezó (primera vez en curso) y cuándo se hizo; devuelve lo que hay que guardar.
-  function applyStatus(task, status) {
-    const now = new Date().toISOString();
-    task.status = status;
-    const patch = { status };
-    if (status === 'progress' && !task.startedAt) { task.startedAt = now; patch.startedAt = now; }
-    if (status === 'done') { task.doneAt = now; patch.doneAt = now; if (!task.startedAt) { task.startedAt = now; patch.startedAt = now; } }
-    else if (task.doneAt) { task.doneAt = ''; patch.doneAt = ''; }
-    return patch;
-  }
-
   function projectRank(loc) {
     if (!loc) return 2;
     return PROJECTS.indexOf(loc) === -1 ? 1 : 0;
@@ -1233,7 +1116,6 @@
       <div class="proj-h">
         <b>${g.loc ? escapeHtml(g.loc) : 'Sin proyecto'}</b><span class="cnt">${g.items.length}</span>
         ${isDoneGroup ? '<span class="done-tag">Hecha</span>' : ''}
-        ${g.loc ? `<button type="button" class="proj-close" data-action="close-project" data-project="${escapeAttr(g.loc)}" aria-label="Cerrar proyecto">${ICON.flag}</button>` : ''}
         <button type="button" class="proj-add" data-action="add-for-project" data-project="${escapeAttr(g.loc)}" aria-label="Añadir tarea aquí">${ICON.plus}</button>
       </div>
       ${g.items.map(t => taskRowHtml(t, todayStr, section)).join('')}`).join('');
@@ -1254,7 +1136,6 @@
     return `
       <div class="proj-h">
         <b>${label}</b><span class="cnt">${c.open.length}</span>
-        ${c.project ? `<button type="button" class="proj-close" data-action="close-project" data-project="${escapeAttr(c.project)}" aria-label="Cerrar proyecto">${ICON.flag}</button>` : ''}
         <button type="button" class="proj-add" data-action="add-for-project" data-project="${escapeAttr(c.project)}" aria-label="Añadir tarea aquí">${ICON.plus}</button>
       </div>
       ${c.open.map(t => taskRowHtml(t, todayStr, 'notDone')).join('')}
@@ -1453,16 +1334,14 @@
       renderList();
       return;
     }
-    const closeProjBtn = e.target.closest('[data-action="close-project"]');
-    if (closeProjBtn) { openCloseProject(closeProjBtn.dataset.project); return; }
     const cycleBtn = e.target.closest('[data-action="cycle"]');
     if (cycleBtn) {
       const id = cycleBtn.dataset.id;
       const task = tasks.find(t => t.id === id);
       const idx = STATUS_ORDER.indexOf(task.status);
-      const patch = applyStatus(task, STATUS_ORDER[(idx + 1) % STATUS_ORDER.length]);
+      task.status = STATUS_ORDER[(idx + 1) % STATUS_ORDER.length];
       render();
-      setDoc(taskDoc(id), patch, { merge: true }).catch(console.error);
+      setDoc(taskDoc(id), { status: task.status }, { merge: true }).catch(console.error);
       return;
     }
     const openBtn = e.target.closest('[data-action="open-detail"]');
@@ -1688,13 +1567,13 @@
     const task = {
       id: ref.id, emoji: DEFAULT_EMOJI, text: '', assignees: [], toolsList: [], project: project || '', rubro: '',
       status: 'pending', order: Date.now(), notes: '', photos: [], shopping: [], subtasks: [],
-      toolsChecked: {}, highPriority: false, peopleNeeded: 1, todayDate: '', createdAt: new Date().toISOString(), startedAt: '', doneAt: '',
+      toolsChecked: {}, highPriority: false, peopleNeeded: 1, todayDate: '',
     };
     tasks.push(task);
     draftId = task.id;
     setDoc(ref, {
       text: '', toolsList: [], project: task.project, assignees: [],
-      status: 'pending', order: task.order, peopleNeeded: 1, createdAt: task.createdAt,
+      status: 'pending', order: task.order, peopleNeeded: 1,
     }).catch(err => { console.error(err); alert("No se pudo guardar la tarea. Revisa tu conexión."); });
     openDetail(task.id, true);
   }
@@ -1834,9 +1713,9 @@
     const b = e.target.closest('button[data-status]');
     const task = currentTask();
     if (!b || !task) return;
-    const patch = applyStatus(task, b.dataset.status);
+    task.status = b.dataset.status;
     render();
-    Object.keys(patch).forEach(k => scheduleFieldSave(task.id, k, patch[k], 0));
+    scheduleFieldSave(task.id, 'status', task.status, 0);
   });
 
   document.getElementById('detailDeleteBtn').addEventListener('click', () => {
@@ -2135,9 +2014,6 @@
     if (!task) return;
     detailProjectChips.innerHTML = projectChipsHtml(task.project || '');
     detailProjectOtherRow.style.display = detailProjectOtherOpen ? '' : 'none';
-    const sugg = detailProjectOtherOpen ? suggestedProjectNames() : [];
-    document.getElementById('detailProjectSuggest').innerHTML = sugg.length
-      ? `<div class="sugg-lbl">Clientes anteriores</div><div class="chips" style="margin-top:6px">${sugg.map(n => chipHtml(n, false, `data-suggest="${escapeAttr(n)}"`, 'dash')).join('')}</div>` : '';
     detailProjectLabel.textContent = task.project || 'Sin proyecto';
   }
   function saveLists() {
@@ -2190,12 +2066,6 @@
     setTaskProject(task, existing || name);
   }
   document.getElementById('detailProjectOtherAddBtn').addEventListener('click', addDetailProject);
-  document.getElementById('detailProjectSuggest').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-suggest]');
-    if (!b) return;
-    detailProjectOtherInput.value = b.dataset.suggest;
-    addDetailProject();
-  });
   detailProjectOtherInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addDetailProject(); } });
 
   function renderDetailRubro() {
@@ -2479,187 +2349,6 @@
     shoppingOverlayOpen = false;
     shoppingOverlay.classList.remove('open');
   });
-
-  // ---- Cerrar proyecto (entregado y cobrado) + historial ----
-  const closeOverlay = document.getElementById('closeOverlay');
-  const historyOverlay = document.getElementById('historyOverlay');
-  const historyBody = document.getElementById('historyBody');
-  let closingProject = '';
-  const CURRENCY_KEY = 'lastCurrency';
-
-  // Nombres de proyectos/clientes que se fueron registrando y ya no están en la lista (para sugerirlos al añadir)
-  function suggestedProjectNames() {
-    const seen = new Set(PROJECTS.map(n => n.toLowerCase()));
-    const out = [];
-    closedProjects.forEach(c => {
-      const n = (c.name || '').trim();
-      if (n && !seen.has(n.toLowerCase())) { seen.add(n.toLowerCase()); out.push(n); }
-    });
-    return out.sort((a, b) => a.localeCompare(b));
-  }
-
-  function fmtDay(v) {
-    if (!v) return '—';
-    const d = /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(v + 'T12:00:00') : new Date(v);
-    if (isNaN(d)) return '—';
-    return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
-  }
-  function fmtNum(n) { return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 }).format(n); }
-
-  function openCloseProject(name) {
-    closingProject = name;
-    const list = tasks.filter(t => t.project === name && t.text.trim());
-    const open = list.filter(t => t.status !== 'done').length;
-    document.getElementById('closeProjName').textContent = name;
-    document.getElementById('closeSummary').innerHTML = `<b>${escapeHtml(name)}</b> · ${list.length} tarea${list.length === 1 ? '' : 's'} (${list.length - open} hecha${list.length - open === 1 ? '' : 's'})`
-      + (open ? `<div class="close-warn">${open} sin terminar: también se guardarán en el historial.</div>` : '')
-      + `<div class="none">Se quita de la lista de proyectos y todo queda guardado en el historial.</div>`;
-    document.getElementById('closeHours').value = '';
-    document.getElementById('closeAmount').value = '';
-    let cur = '€';
-    try { cur = localStorage.getItem(CURRENCY_KEY) || '€'; } catch (e) {}
-    document.getElementById('closeCurrency').value = cur;
-    document.getElementById('closeDelivered').value = getTodayString();
-    document.getElementById('closePaid').value = getTodayString();
-    document.getElementById('closeNotes').value = '';
-    closeOverlay.classList.add('open');
-    closeOverlay.scrollTop = 0;
-  }
-  document.getElementById('closeBackBtn').addEventListener('click', () => closeOverlay.classList.remove('open'));
-
-  function taskSnapshot(t) {
-    return {
-      id: t.id, text: t.text, status: t.status, order: t.order, rubro: t.rubro || '', highPriority: !!t.highPriority,
-      assignees: t.assignees || [], toolsList: t.toolsList || [], notes: t.notes || '', photos: t.photos || [],
-      shopping: t.shopping || [], subtasks: t.subtasks || [], dueDate: t.dueDate || '', dueTime: t.dueTime || '',
-      todayDate: t.todayDate || '', createdAt: t.createdAt || '', startedAt: t.startedAt || '', doneAt: t.doneAt || '',
-      peopleNeeded: t.peopleNeeded || 1,
-    };
-  }
-
-  document.getElementById('closeConfirmBtn').addEventListener('click', async () => {
-    const name = closingProject;
-    if (!name) return;
-    const btn = document.getElementById('closeConfirmBtn');
-    const list = tasks.filter(t => t.project === name);
-    const real = list.filter(t => t.text.trim());
-    const hours = parseFloat(document.getElementById('closeHours').value);
-    const amount = parseFloat(document.getElementById('closeAmount').value);
-    const currency = document.getElementById('closeCurrency').value.trim();
-    try { localStorage.setItem(CURRENCY_KEY, currency); } catch (e) {}
-    const dates = real.map(t => t.createdAt).filter(Boolean).sort();
-    const entry = {
-      name,
-      closedAt: new Date().toISOString(),
-      deliveredDate: document.getElementById('closeDelivered').value || '',
-      paidDate: document.getElementById('closePaid').value || '',
-      hours: isNaN(hours) ? 0 : hours,
-      amount: isNaN(amount) ? 0 : amount,
-      currency,
-      notes: document.getElementById('closeNotes').value.trim(),
-      firstTaskAt: dates[0] || '',
-      tasks: real.map(taskSnapshot),
-    };
-    btn.disabled = true;
-    try {
-      const ref = doc(closedCol);
-      await setDoc(ref, entry);               // primero el historial: si falla, no se borra nada
-      const batch = writeBatch(db);
-      list.forEach(t => batch.delete(taskDoc(t.id)));
-      await batch.commit();
-    } catch (err) {
-      console.error(err);
-      alert('No se pudo cerrar el proyecto. Revisa tu conexión y vuelve a intentarlo.');
-      btn.disabled = false;
-      return;
-    }
-    btn.disabled = false;
-    list.filter(t => t.status !== 'done').forEach(calendarDelete);
-    PROJECTS = PROJECTS.filter(p => p !== name);
-    tasks = tasks.filter(t => t.project !== name);
-    if (currentProjectFilter === name) currentProjectFilter = 'all';
-    saveLists();
-    closeOverlay.classList.remove('open');
-    render();
-  });
-
-  function renderHistory() {
-    if (!closedProjects.length) {
-      historyBody.innerHTML = `<div class="blk"><div class="none">Aún no has cerrado ningún proyecto. Usa la bandera que hay junto al nombre de cada proyecto en la lista.</div></div>`;
-      return;
-    }
-    const hours = closedProjects.reduce((n, c) => n + (c.hours || 0), 0);
-    const byCur = {};
-    closedProjects.forEach(c => { if (c.amount) byCur[c.currency || ''] = (byCur[c.currency || ''] || 0) + c.amount; });
-    const money = Object.keys(byCur).map(k => `${fmtNum(byCur[k])}${k ? ' ' + escapeHtml(k) : ''}`).join(' · ') || '—';
-    let html = `<div class="hist-tot">
-      <div><b>${closedProjects.length}</b><span>proyecto${closedProjects.length === 1 ? '' : 's'} cerrado${closedProjects.length === 1 ? '' : 's'}</span></div>
-      <div><b>${fmtNum(hours)}</b><span>horas</span></div>
-      <div><b style="font-size:${Object.keys(byCur).length > 1 ? 16 : 26}px">${money}</b><span>cobrado</span></div></div>`;
-    html += closedProjects.map(c => {
-      const ts = c.tasks || [];
-      const doneN = ts.filter(t => t.status === 'done').length;
-      const amt = c.amount ? `${fmtNum(c.amount)}${c.currency ? ' ' + escapeHtml(c.currency) : ''}` : '';
-      return `<details class="hist-p">
-        <summary>
-          <span class="hist-name">${escapeHtml(c.name || '')}</span>
-          <span class="hist-money">${amt}</span>
-          <span class="hist-sub">Cerrado ${fmtDay(c.closedAt)} · ${c.hours ? fmtNum(c.hours) + ' h · ' : ''}${doneN}/${ts.length} tareas</span>
-        </summary>
-        <div class="hist-body">
-          <dl class="hist-kv">
-            <dt>Primera tarea</dt><dd>${fmtDay(c.firstTaskAt)}</dd>
-            <dt>Entregado</dt><dd>${fmtDay(c.deliveredDate)}</dd>
-            <dt>Cobrado</dt><dd>${fmtDay(c.paidDate)}${amt ? ' · ' + amt : ''}</dd>
-            <dt>Horas</dt><dd>${c.hours ? fmtNum(c.hours) : '—'}</dd>
-            <dt>Cerrado</dt><dd>${fmtDay(c.closedAt)}</dd>
-          </dl>
-          ${c.notes ? `<div class="hist-notes">${escapeHtml(c.notes)}</div>` : ''}
-          ${ts.map(t => {
-            const when = [t.createdAt ? 'creada ' + fmtDay(t.createdAt) : '', t.startedAt ? 'empezada ' + fmtDay(t.startedAt) : '', t.doneAt ? 'hecha ' + fmtDay(t.doneAt) : '', t.dueDate ? 'para ' + fmtDay(t.dueDate) : ''].filter(Boolean).join(' · ');
-            const subs = (t.subtasks || []);
-            return `<div class="hist-t"><span class="sb ${t.status === 'done' ? 'on' : ''}">${t.status === 'done' ? ICON.check : ''}</span>
-              <div><span class="txt ${t.status === 'done' ? 'done' : ''}">${escapeHtml(t.text)}</span>
-              ${when ? `<small>${when}</small>` : ''}
-              ${subs.length ? `<small>${subs.filter(x => x.done).length}/${subs.length} subtareas</small>` : ''}
-              ${t.notes ? `<small>${escapeHtml(t.notes)}</small>` : ''}</div></div>`;
-          }).join('')}
-          <div class="hist-act">
-            <button type="button" data-hist="reopen" data-id="${c.id}">Reabrir proyecto</button>
-            <button type="button" class="danger" data-hist="delete" data-id="${c.id}">Borrar del historial</button>
-          </div>
-        </div>
-      </details>`;
-    }).join('');
-    historyBody.innerHTML = html;
-  }
-  historyBody.addEventListener('click', async (e) => {
-    const b = e.target.closest('[data-hist]');
-    if (!b) return;
-    const c = closedProjects.find(x => x.id === b.dataset.id);
-    if (!c) return;
-    if (b.dataset.hist === 'delete') {
-      if (!confirm(`¿Borrar "${c.name}" del historial? No se puede deshacer.`)) return;
-      (c.tasks || []).forEach(t => (t.photos || []).forEach(ph => ph.path && deleteObject(storageRef(storage, ph.path)).catch(() => {})));
-      deleteDoc(doc(closedCol, c.id)).catch(console.error);
-      return;
-    }
-    if (!confirm(`¿Reabrir "${c.name}"? Vuelve a la lista con sus tareas y sale del historial.`)) return;
-    try {
-      const batch = writeBatch(db);
-      (c.tasks || []).forEach(t => { const { id, ...rest } = t; batch.set(taskDoc(id), { ...rest, project: c.name }); });
-      batch.delete(doc(closedCol, c.id));
-      await batch.commit();
-    } catch (err) { console.error(err); alert('No se pudo reabrir el proyecto.'); return; }
-    if (!PROJECTS.some(p => p.toLowerCase() === c.name.toLowerCase())) { PROJECTS.push(c.name); saveLists(); }
-    historyOverlay.classList.remove('open');
-  });
-  document.getElementById('historyOpenBtn').addEventListener('click', () => {
-    renderHistory();
-    historyOverlay.classList.add('open');
-    historyOverlay.scrollTop = 0;
-  });
-  document.getElementById('historyBackBtn').addEventListener('click', () => historyOverlay.classList.remove('open'));
 
   render();
 </script>
