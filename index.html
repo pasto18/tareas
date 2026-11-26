@@ -505,6 +505,7 @@
           <input class="input" type="date" id="detailDueDate" aria-label="Fecha">
           <input class="input" type="time" id="detailDueTime" aria-label="Hora (opcional)">
         </div>
+        <div class="chips" style="margin-top:10px;"><button type="button" class="chip" id="detailDueToday">Hoy</button><button type="button" class="chip" id="detailDueTomorrow">Mañana</button></div>
         <div class="none" id="detailCalStatus"></div>
         <button type="button" class="chip dash" id="detailDueClear" style="display:none;margin-top:10px;">Quitar fecha</button>
       </div>
@@ -2169,6 +2170,13 @@
   }
   detailDueDate.addEventListener('change', onDueChange);
   detailDueTime.addEventListener('change', onDueChange);
+  function setQuickDue(offset) {
+    const d = new Date(); d.setDate(d.getDate() + offset);
+    detailDueDate.value = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+    onDueChange();
+  }
+  document.getElementById('detailDueToday').addEventListener('click', () => setQuickDue(0));
+  document.getElementById('detailDueTomorrow').addEventListener('click', () => setQuickDue(1));
   detailDueClear.addEventListener('click', () => {
     detailDueDate.value = '';
     detailDueTime.value = '';
