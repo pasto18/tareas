@@ -69,6 +69,12 @@ const $ = id => document.getElementById(id);
   }
   $('go').onclick = submit;
   $('prio').onclick = () => { prio = !prio; $('prio').classList.toggle('on', prio); };
+  function quickDate(offset) {
+    const d = new Date(); d.setDate(d.getDate() + offset);
+    $('date').value = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  }
+  $('today').onclick = () => quickDate(0);
+  $('tomorrow').onclick = () => quickDate(1);
   $('web').onclick = () => window.api.openWeb();
   $('text').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } else if (e.key === 'Escape') window.api.hide(); });
   window.api.onShown(() => { load(); $('text').focus(); });
